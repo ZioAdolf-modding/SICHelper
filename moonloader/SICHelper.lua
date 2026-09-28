@@ -3848,10 +3848,26 @@ K.VER_URL  = "https://raw.githubusercontent.com/ZioAdolf-modding/SICHelper/main/
 K.VER_FILE = getWorkingDirectory() .. "/config/SICHelper_version.txt"
 K.VER_WAIT = 20    -- secunde cat asteptam fisierul descarcat
 
-function App.Ver.num(s)
-    local a, b, c = tostring(s or ""):match("(%d+)%.(%d+)%.(%d+)")
+-- numarul versiunii (1.7.0) si eticheta de pre-lansare ("beta", "rc.1"; nil = versiune finala)
+function App.Ver.parse(s)
+    local txt = tostring(s or "")
+    local a, b, c = txt:match("(%d+)%.(%d+)%.(%d+)")
     if not a then return nil end
-    return tonumber(a) * 10000 + tonumber(b) * 100 + tonumber(c)
+    return tonumber(a) * 1000000 + tonumber(b) * 1000 + tonumber(c), txt:match("%d+%.%d+%.%d+%-([%w%.%-]+)")
+end
+
+-- e versiunea de pe sursa oficiala mai noua decat a mea? La acelasi numar, versiunea finala bate
+-- pre-lansarea (1.7.0 > 1.7.0-beta), iar intre doua pre-lansari decide eticheta (beta < rc).
+function App.Ver.isNewer(remote, mine)
+    local rn, rp = App.Ver.parse(remote)
+    local mn, mp = App.Ver.parse(mine)
+    if not rn then return false end
+    if not mn then return true end
+    if rn ~= mn then return rn > mn end
+    if rp == mp then return false end
+    if not rp then return true end        -- finala bate pre-lansarea cu acelasi numar
+    if not mp then return false end
+    return rp > mp
 end
 
 function App.Ver.check()
@@ -3874,11 +3890,11 @@ function App.Ver.update()
     if not f then return end
     local s = f:read("*a") or ""
     f:close()
-    local n = App.Ver.num(s)
+    local n = App.Ver.parse(s)
     if not n then return end          -- fisierul e inca incomplet: mai incercam la urmatorul frame
     App.Ver.waiting = nil
     App.Ver.latest = (s:match("[%w%.%-]+") or "?")
-    if n > (App.Ver.num(VERSION) or 0) then
+    if App.Ver.isNewer(App.Ver.latest, VERSION) then
         App.Ver.newer = true
         msg(tr("ver_new", App.Ver.latest))
     else
