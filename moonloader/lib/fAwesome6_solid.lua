@@ -1,3 +1,17 @@
+-- ============================================================
+-- fAwesome6_solid.lua - numele iconitelor Font Awesome 6 Free (Solid) si fontul insusi,
+-- incorporat aici ca TTF comprimat (base85), plus cateva functii pentru imgui.
+--
+-- Font Awesome Free, de Fonticons, Inc. - https://fontawesome.com/license/free
+--   fontul: SIL OFL 1.1   iconitele: CC BY 4.0   codul: MIT
+-- Fisierul nu face parte din codul SICHelper si isi pastreaza licentele de mai sus.
+--
+-- Modificat pentru SICHelper (2026):
+--   * fa_icon.__iconRanges - tine in viata intervalele de glife: imgui pastreaza doar un pointer
+--     catre ele, iar eliberarea lor de catre Lua crapa jocul cand se reconstruieste atlasul de
+--     fonturi (revenirea din alt-tab)
+--   * fa_icon.InitBig(fontsize) - acelasi font, incarcat separat, la alta marime
+-- ============================================================
 local MIN_ICON, MAX_ICON = 0xe005, 0xf8ff--0xf000, 0xf83e
 local fa_icon = {
 	["ADDRESS_BOOK"] = "\xef\x8a\xb9",

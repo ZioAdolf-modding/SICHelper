@@ -1,6 +1,9 @@
 -- This file is part of mimgui project
 -- Licensed under the MIT License
 -- Copyright (c) 2018, FYP <https://github.com/THE-FYP>
+--
+-- Modificat pentru SICHelper (2026): cursorul nu se mai comuta cand fereastra jocului nu e in
+-- fata (alt-tab cu o fereastra deschisa crapa jocul). Restul fisierului e neschimbat.
 
 assert(getMoonloaderVersion() >= 025)
 

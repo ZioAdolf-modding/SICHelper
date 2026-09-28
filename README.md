@@ -100,4 +100,5 @@ sa pastreze creditele**. Vezi si [TRADEMARK.md](TRADEMARK.md) pentru nume si log
 - **FYP** — MoonLoader si ML-ReloadAll.
 - **FlaCode & Cosmo** — HassleHUD (inspiratie pentru HUD).
 
-Bibliotecile din `moonloader/lib/` sunt ale autorilor lor si isi pastreaza licentele proprii.
+Bibliotecile din `moonloader/lib/` sunt ale autorilor lor si isi pastreaza licentele proprii:
+lista completa, cu autori si licente, e in [THIRD-PARTY.md](THIRD-PARTY.md).

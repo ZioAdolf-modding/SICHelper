@@ -103,4 +103,5 @@ See also [TRADEMARK.md](TRADEMARK.md) for the name and logo.
 - **FYP** — MoonLoader and ML-ReloadAll.
 - **FlaCode & Cosmo** — HassleHUD (HUD inspiration).
 
-The libraries in `moonloader/lib/` belong to their authors and keep their own licenses.
+The libraries in `moonloader/lib/` belong to their authors and keep their own licenses: the full
+list, with authors and licenses, is in [THIRD-PARTY.md](THIRD-PARTY.md).
