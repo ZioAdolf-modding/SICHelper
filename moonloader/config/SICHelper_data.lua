@@ -277,6 +277,13 @@ data.rank_zero    = "Rang 0 (da testul de intrare)"
 data.player_tags = { "posthunter", "baiat de treaba", "cere des", "atent", "de evitat" }
 
 -- ------------------------------------------------------------
+
+-- ------------------------------------------------------------
+-- NIVELURILE CARE INTRA IN RAPORTUL SAPTAMANAL
+-- Serverul nu pune in raport licentele date jucatorilor de nivel 1 si nici pe cele de la 50+.
+-- Schimba pragurile daca factiunea ta socoteste altfel.
+-- ------------------------------------------------------------
+data.report_levels = { min = 2, max = 49 }
 -- FACTIUNEA ALIATA: cui dai banii inapoi pe licente.
 -- Cheia de sus e factiunea ta, iar inauntru orasul (la factiunile care au orase).
 -- Gol = nu ai aliat. Aliatul se poate alege si din /sih -> Features, fara sa umbli aici.

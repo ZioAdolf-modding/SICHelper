@@ -2101,11 +2101,33 @@ function Report.load()
 end
 
 -- o licenta data = o "actiune in factiune": crestem raportul local pana la urmatorul /raport
-function Report.bump()
+-- intra licenta in raportul saptamanal? Serverul nu pune la socoteala licentele date jucatorilor
+-- de nivel mic (1) si nici pe cele de la 50+. Pragurile sunt in fisierul de date.
+function Report.counts(level)
+    if not level or level <= 0 then return true end    -- nivel necunoscut: numaram, sa nu pierdem progres
+    local lv = Data and Data.report_levels
+    local min = (lv and tonumber(lv.min)) or 2
+    local max = (lv and tonumber(lv.max)) or 49
+    return level >= min and level <= max
+end
+
+-- o licenta in plus in raport. Fiecare contor se opreste la maxim: cand progresul e plin (10/10),
+-- ce urmeaza nu se mai aduna acolo, ci doar la bonus.
+function Report.bump(level)
     local d = Report.data
     if not d then return end
-    if d.progress then d.progress.done = (d.progress.done or 0) + 1 end
-    if d.bonus then d.bonus.done = (d.bonus.done or 0) + 1 end
+    if not Report.counts(level) then
+        trace("raport: licenta la nivel " .. tostring(level) .. " nu intra in raport")
+        return
+    end
+    local function add(c)
+        if not c then return end
+        local done, total = tonumber(c.done) or 0, tonumber(c.total)
+        if total and done >= total then return end     -- plin: ramane asa
+        c.done = done + 1
+    end
+    add(d.progress)
+    add(d.bonus)
     Report.save()
 end
 -- o licenta data (/givelicense trimis): o numaram dupa nivelul jucatorului
@@ -2115,7 +2137,7 @@ function Report.countGiven(id)
     if w and w.id == id then level = w.level end
     if level >= 50 then Report.session.high = Report.session.high + 1
     else Report.session.low = Report.session.low + 1 end
-    Report.bump()
+    Report.bump(level)
 end
 
 -- ============================================================

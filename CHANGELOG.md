@@ -14,6 +14,12 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   Daca nu ti-ai deblocat banii cu `/pin`, plata asteapta, te anunta pe ecran si pleaca singura
   imediat ce dai `/pin`; `/sicpay` o trimite pe loc.
 
+### Reparat
+- Raportul de pe ecran nu mai numara ce nu numara nici serverul: cand progresul e plin (10/10),
+  licentele urmatoare merg doar la bonus, iar fiecare contor se opreste la maximul lui. Licentele
+  date jucatorilor de nivel 1 si celor de la 50+ nu mai intra deloc in raport (pragurile sunt in
+  `config/SICHelper_data.lua`, la `data.report_levels`).
+
 
 ## [1.6.0-beta] — 2026-09-28
 
