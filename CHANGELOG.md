@@ -19,6 +19,8 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   licentele urmatoare merg doar la bonus, iar fiecare contor se opreste la maximul lui. Licentele
   date jucatorilor de nivel 1 si celor de la 50+ nu mai intra deloc in raport (pragurile sunt in
   `config/SICHelper_data.lua`, la `data.report_levels`).
+- Punctul din raport se ia **cand jucatorul accepta** licenta, nu cand i-o trimiti. O licenta
+  trimisa si refuzata (sau ratata) nu mai umfla raportul.
 
 
 ## [1.6.0-beta] — 2026-09-28

@@ -1594,7 +1594,7 @@ function Give.one(id, licId)
     lastGive.key, lastGive.at = key, os.clock()
     local lic = Licenses.byId[licId]
     Queue.push("/givelicense " .. id .. " " .. lic.server)
-    Report.countGiven(id)    -- raportul creste la trimitere, nu la acceptare
+    -- raportul NU creste aici: punctul se ia abia cand jucatorul accepta licenta (vezi Give.onAccepted)
     Check.mark(id, "finish")
     msg(tr("given", lic.label, nameTag(id, playerName(id))))
     return true
@@ -1720,6 +1720,8 @@ function Give.onAccepted(text)
 
     if id and State.acceptedId == id then State.acceptedId = nil end   -- lectia lui s-a incheiat
     local lic = licenseInText(text)
+    -- punctul din raport se ia in acest moment: jucatorul a acceptat licenta
+    if id then Report.countGiven(id) end
     if id and lic and App and App.Info then
         App.Info.remember(playerName(id), lic)
         App.Ally.onGiven(id, playerName(id), lic)   -- factiune aliata: banii se dau inapoi
