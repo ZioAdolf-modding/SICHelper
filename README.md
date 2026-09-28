@@ -1,6 +1,7 @@
 # SICHelper
 
 CMD helper pentru **School Instructors** pe B-Zone RPG (SA:MP). Scris in Lua, pentru MoonLoader.
+Deocamdata acopera doar aceasta factiune; celelalte se adauga treptat.
 
 **Versiune:** 1.6.0-beta · **Autor:** ZioAdolf (Discord: `vlandrewz`) · **Licenta:** GPL-3.0-or-later
 
@@ -54,12 +55,18 @@ CLEO nu e necesar.
 
 Configul se creeaza singur: `moonloader/config/SIC_Helper.ini`.
 
-## Pentru alte factiuni
+## Alte factiuni
 
-Interfata nu e legata de School Instructors: alegi factiunea din `/sih` (toate cele de pe
-rpg.b-zone.ro sunt in lista, cu culorile lor), iar textele, preturile si mesajele stau in
-`moonloader/config/SICHelper_data.lua` — un fisier de date, nu cod. Daca vrei o adaptare pentru
-factiunea ta, deschide un [issue](https://github.com/ZioAdolf-modding/SICHelper/issues) sau scrie-mi pe Discord.
+**Deocamdata helperul e facut pentru School Instructors.** Comenzile, testele, preturile si
+procedurile din el sunt ale acestei factiuni. Celelalte se adauga treptat, una cate una.
+
+Terenul e insa pregatit: interfata nu e legata de o anume factiune (o alegi din `/sih` — toate cele
+de pe rpg.b-zone.ro sunt in lista, cu culorile si numele rangurilor lor), iar textele, preturile si
+mesajele stau in `moonloader/config/SICHelper_data.lua` — un fisier de date, nu cod. Ce lipseste
+pentru o alta factiune sunt comenzile si procedura ei specifica.
+
+Vrei factiunea ta la rand? Deschide un [issue](https://github.com/ZioAdolf-modding/SICHelper/issues)
+sau scrie-mi pe Discord, cu comenzile si procedura voastra — asa ajunge mai repede pe lista.
 
 ## Ce nu face (pentru staff)
 

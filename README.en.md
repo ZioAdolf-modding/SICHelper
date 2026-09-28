@@ -1,6 +1,7 @@
 # SICHelper
 
 CMD helper for **School Instructors** on B-Zone RPG (SA:MP). Written in Lua, for MoonLoader.
+For now it covers only this faction; the others will be added gradually.
 
 **Version:** 1.6.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
 
@@ -56,12 +57,18 @@ CLEO is not required.
 
 The config file is created automatically: `moonloader/config/SIC_Helper.ini`.
 
-## For other factions
+## Other factions
 
-The interface is not tied to School Instructors: you pick your faction in `/sih` (every faction on
-rpg.b-zone.ro is in the list, with its own colours), and the texts, prices and messages live in
-`moonloader/config/SICHelper_data.lua` — a data file, not code. If you want an adaptation for your
-faction, open an [issue](https://github.com/ZioAdolf-modding/SICHelper/issues) or message me on Discord.
+**For now the helper is built for School Instructors.** The commands, tests, prices and procedures
+in it belong to that faction. The others will be added gradually, one at a time.
+
+The groundwork is there, though: the interface is not tied to any one faction (you pick yours in
+`/sih` — every faction on rpg.b-zone.ro is in the list, with its colours and rank names), and the
+texts, prices and messages live in `moonloader/config/SICHelper_data.lua` — a data file, not code.
+What is missing for another faction are its own commands and procedure.
+
+Want your faction next? Open an [issue](https://github.com/ZioAdolf-modding/SICHelper/issues) or
+message me on Discord with your commands and procedure — that moves it up the list.
 
 ## What it does not do (for staff)
 
