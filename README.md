@@ -20,7 +20,7 @@ Deocamdata acopera doar aceasta factiune; celelalte se adauga treptat.
   limba (RO / EN) detectata din cerere. Cererile primite cat ai jocul in bara se arata cand revii.
 - **Dupa accept** — jucatorul devine candidatul tau si primeste un `/sms` de confirmare.
 - **`/giveme`** — licentele pentru tine (renew): trimite `/givelicense` pe id-ul tau si accepta singur ce ofera serverul.
-- **`/withme`** — anunt pe `/f` in formatul faciunii, cu subtotalul licentelor si bonusul AR.
+- **`/withme`** — anunt pe `/f` in formatul factiunii, cu subtotalul licentelor si bonusul AR.
 - **`/notepad`** — notitele tale, pe foldere: le trimiti in chat exact cum sunt scrise (text sau comanda)
 - **`/info <id>`** — buletinul jucatorului: nivel, ping, FPS, factiunea cu numele rangului, licentele,
   distanta si vehiculul, plus notitele tale despre el (etichete si text liber, salvate pe nume).
