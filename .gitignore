@@ -1,0 +1,20 @@
+# setarile si urmele locale, nu se versioneaza
+moonloader/config/SIC_Helper.ini
+moonloader/SICHelper_trace.txt
+moonloader/SICHelper_trace_prev.txt
+moonloader/moonloader.log
+moonloader/config/SICHelper_notes.lua
+moonloader/config/SICHelper_players.lua
+moonloader/config/SICHelper_version.txt
+
+# pozele de skin pentru /info: nu sunt ale mele, nu se redistribuie
+moonloader/resource/skins/
+
+# arhive construite local
+*.zip
+*.rar
+
+# gunoi de sistem
+Thumbs.db
+desktop.ini
+.DS_Store

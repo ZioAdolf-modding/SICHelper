@@ -1,0 +1,4 @@
+# fisierele se pastreaza exact cum sunt (Lua, dll, png): fara conversii de sfarsit de linie
+* -text
+*.dll binary
+*.png binary
