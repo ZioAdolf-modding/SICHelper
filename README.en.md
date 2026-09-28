@@ -24,6 +24,9 @@ For now it covers only this faction; the others will be added gradually.
 - **`/giveme`** — licenses for yourself (renew): sends `/givelicense` on your own id and accepts what the server offers.
 - **`/withme`** — the `/f` announcement in the faction format, with the license subtotal and the AR bonus.
 - **`/notepad`** — your notes, in folders: send them to chat exactly as written (text or command) or copy
+- **Allied faction** — a license given to a member of the allied faction is paid back automatically
+  with `/pay`, as soon as the player accepts it (SF School Instructors are allied with Paramedics).
+  If your money is still locked, the payment waits and goes out the moment you type `/pin`.
 - **`/info <id>`** — the player card: level, ping, FPS, faction with the rank name, licenses, distance
   and vehicle, plus your own notes about them (tags and free text, saved per name).
   them. Also opens from `/sih`, from the icon bar or from a key.

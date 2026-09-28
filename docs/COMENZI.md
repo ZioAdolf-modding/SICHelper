@@ -18,6 +18,7 @@ Ce ajunge la server sunt comenzile din coloana „trimite".
 | `/info <id\|nume>` | buletinul jucatorului: nivel, factiune + rang, licente, notitele tale | `/id` (ascuns) |
 | `/sicinfo [id]` | acelasi, dar mereu al helperului (fara id: candidatul / cel mai apropiat) | `/id` (ascuns) |
 | `/sicreset` | readuce ferestrele si HUD-urile la pozitia implicita | — |
+| `/sicpay` | trimite acum platile catre aliati care asteptau `/pin` | `/pay ...` |
 | `/sicwizard` | redeschide ghidul de pornire | — |
 | `/ffvr` / `/sfvr` | porneste / opreste FVR | `/f`, `/sx`, `/fvr` |
 

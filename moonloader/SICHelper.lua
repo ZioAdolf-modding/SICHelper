@@ -74,6 +74,9 @@ K.NOTES_FILE   = getWorkingDirectory() .. "/config/SICHelper_notes.lua"   -- not
 K.NOTE_MAX     = 256         -- lungimea maxima a unei notite
 K.NOTE_CHAT    = 128         -- cat intra pe o linie de chat a serverului; peste, se taie
 K.NOTES_FOLD_W = 146         -- latimea coloanei cu foldere din /notepad, px
+K.ALLY_DELAY   = 2200        -- ms de asteptat inainte de /pay (serverul cere pauza intre comenzi)
+K.ALLY_MAX_AGE = 180         -- secunde cat mai asteapta o plata neexpediata (fara /pin)
+K.ALLY_WARN    = 20          -- secunde intre doua atentionari "da /pin"
 
 -- valori cu semnificatie fixa: in cod se folosesc DOAR aceste nume, nu cifre / stringuri goale
 K.LANG_RO, K.LANG_EN                                 = "ro", "en"
@@ -288,6 +291,8 @@ local defaultConfig = {
         sec_notes    = 0,
         wizardDone   = 0,         -- ghidul de pornire a fost parcurs (sau sarit)
         verCheck     = 1,         -- verifica la pornire daca exista o versiune mai noua
+        allyPay      = 0,         -- da banii inapoi membrilor factiunii aliate, cu /pay
+        allyId       = "",        -- factiunea aliata aleasa manual; gol = cea din fisierul de date
         bindLegend   = 1,         -- legenda bind-urilor pe ecran (dreapta)
         hideSrvDist  = 1,         -- ascunde mesajul de distanta al serverului cat legenda o arata
         fadeAnim     = 1,         -- tranzitii cu fade la ferestre
@@ -365,6 +370,18 @@ local L = {
         notes_rename_hint = "Dublu-click = redenumeste folderul",
         -- reset aranjament / versiune / ghid de pornire
         font_old = "Fisierul lib/fAwesome6_solid.lua din acest modpack e mai vechi: iconitele mari sunt oprite. Suprascrie-l cu cel din arhiva helperului.",
+        -- factiune aliata
+        f_allyPay = "Banii inapoi aliatilor",
+        f_allyPay_tip = "Cand dai o licenta unui membru al factiunii aliate, helperul ii trimite pretul inapoi cu /pay, imediat ce o accepta. Suma e pretul din fisierul de date, la nivelul lui, fara bonusul AR (acela vine de la factiune, nu din buzunarul lui).",
+        ally_none = "fara aliat",
+        ally_pick_tip = "Factiunea careia ii dai banii inapoi. Gol = cea scrisa in fisierul de date pentru orasul tau.",
+        ally_title = "Factiune aliata",
+        ally_paid = "Am dat inapoi %s lui %s: e din factiunea aliata.",
+        ally_paid_short = "%s inapoi lui %s",
+        ally_pin = "Banii tai sunt inca sub cheie. Deblocheaza-i cu /pin si plata catre aliat pleaca singura (sau foloseste /sicpay).",
+        ally_pin_short = "Da /pin: o plata catre aliat asteapta",
+        ally_none_due = "Nicio plata in asteptare catre factiunea aliata.",
+        g_sicpay = "trimite acum platile catre aliati care asteptau /pin",
         reset_layout = "Reseteaza aranjamentul", reset_done = "Ferestrele si HUD-urile au revenit la locul lor.",
         reset_layout_tip = "Readuce toate ferestrele si panourile de pe ecran la pozitia si marimea implicita (/sicreset).",
         ver_new = "Versiune noua disponibila: %s", ver_src = "- ia-o din Releases, de pe sursa oficiala",
@@ -596,6 +613,18 @@ local L = {
         notes_rename_hint = "Double-click to rename the folder",
         -- layout reset / version check / wizard
         font_old = "The lib/fAwesome6_solid.lua in this modpack is older: the large icons are off. Overwrite it with the one from the helper archive.",
+        -- allied faction
+        f_allyPay = "Pay allies back",
+        f_allyPay_tip = "When you give a license to a member of the allied faction, the helper sends the price back with /pay as soon as they accept it. The amount is the price from the data file, at their level, without the AR bonus (that one comes from the faction, not from their pocket).",
+        ally_none = "no ally",
+        ally_pick_tip = "The faction you pay back. Empty = the one set in the data file for your city.",
+        ally_title = "Allied faction",
+        ally_paid = "Sent %s back to %s: they are in the allied faction.",
+        ally_paid_short = "%s back to %s",
+        ally_pin = "Your money is still locked. Unlock it with /pin and the payment to your ally goes out by itself (or use /sicpay).",
+        ally_pin_short = "Type /pin: a payment to your ally is waiting",
+        ally_none_due = "No payment waiting for the allied faction.",
+        g_sicpay = "sends the ally payments that were waiting for /pin",
         reset_layout = "Reset the layout", reset_done = "Windows and HUDs are back in place.",
         reset_layout_tip = "Puts every window and on-screen panel back to its default position and size (/sicreset).",
         ver_new = "New version available: %s", ver_src = "- get it from Releases, on the official source",
@@ -1309,6 +1338,7 @@ State = {
     focused   = true,                -- jocul e in fata; cand nu e, nicio fereastra nu e activa (alt-tab crapa cu cursorul pornit)
     acceptSentAt = nil,              -- cand am trimis ultimul /accept needlicense (pentru erori)
     icons     = false,               -- fontul cu iconite s-a incarcat
+    pinOk     = false,               -- ti-ai deblocat banii cu /pin in sesiunea asta
     notes     = new.bool(false),     -- fereastra de notite (/notepad)
     notesFade = Fade.new(),
     noteSel   = 1,                   -- folderul deschis in /notepad
@@ -1690,7 +1720,10 @@ function Give.onAccepted(text)
 
     if id and State.acceptedId == id then State.acceptedId = nil end   -- lectia lui s-a incheiat
     local lic = licenseInText(text)
-    if id and lic and App and App.Info then App.Info.remember(playerName(id), lic) end
+    if id and lic and App and App.Info then
+        App.Info.remember(playerName(id), lic)
+        App.Ally.onGiven(id, playerName(id), lic)   -- factiune aliata: banii se dau inapoi
+    end
     -- candidatul se deblocheaza cand nu mai are licente de primit (fara lant in curs pentru el)
     if id and not (Give.chain and Give.chain.id == id) then Candidate.unlock(id) end
 
@@ -3099,7 +3132,7 @@ end
 -- ============================================================
 local FEATURE_GROUPS = {
     { title = "fg_test",      keys = { "theoryPagesize", "autoStoplesson", "autoDl", "showAnswers", "chain50", "hpMonitor" } },
-    { title = "fg_candidate", keys = { "autoCandidate", "autoSms", "clearCp", "notifyOn", "subtotalAR", "checklist", "reportWindow", "dutyHud", "dutyWindows" } },
+    { title = "fg_candidate", keys = { "autoCandidate", "autoSms", "clearCp", "notifyOn", "subtotalAR", "allyPay", "checklist", "reportWindow", "dutyHud", "dutyWindows" } },
     { title = "fg_look",      keys = { "dock", "bindLegend", "hideSrvDist", "sicLastSent", "fadeAnim", "shotRename", "shortsOn", "verCheck" } },
     { title = "fg_fvr",       keys = { "fvrOn" } },
 }
@@ -3166,6 +3199,31 @@ local function featureRow(key)
             saveCfg()
         end
         if imgui.IsItemHovered() then TIP(u8(tr("bonus_hint"))) end
+    end
+    if key == "allyPay" and feat(key) then
+        -- cui ii dai banii inapoi; gol = cea din fisierul de date, pe orasul tau
+        imgui.SameLine(0, 16)
+        local cur = App.Ally.who()
+        local curFac = Factions.byId[cur]
+        imgui.PushItemWidth(200)
+        if imgui.BeginCombo("##allyfac", u8(curFac and curFac.label or tr("ally_none"))) then
+            if imgui.Selectable(u8(tr("ally_none")) .. "##allynone", cur == "") then
+                cfg.main.allyId = ""
+                saveCfg()
+            end
+            for _, f in ipairs(Factions.list) do
+                local r, g, b = hexToRgb(f.hex)
+                imgui.PushStyleColor(imgui.Col.Text, V4(math.max(r, 0.35), math.max(g, 0.35), math.max(b, 0.35)))
+                if imgui.Selectable(u8(f.label) .. "##ally" .. f.id, f.id == cur) then
+                    cfg.main.allyId = f.id
+                    saveCfg()
+                end
+                imgui.PopStyleColor()
+            end
+            imgui.EndCombo()
+        end
+        imgui.PopItemWidth()
+        if imgui.IsItemHovered() then TIP(u8(tr("ally_pick_tip"))) end
     end
     if key == "dock" and feat(key) then
         -- orientarea barei: auto (dupa margine) / verticala / orizontala
@@ -3850,6 +3908,7 @@ end
 App.Info.open  = new.bool(false)
 App.Info.fade  = Fade.new()
 App.Info.cache = {}     -- dupa nume: ultimul raspuns la /id
+App.Info.byId  = {}     -- acelasi lucru, dupa id (factiunea se afla si pentru plata catre aliati)
 App.Info.tex   = {}     -- imaginile de skin deja incarcate (id -> textura sau false)
 K.INFO_ID_TIMEOUT = 6   -- secunde de asteptat raspunsul la /id
 K.INFO_SKIN_DIR = getWorkingDirectory() .. "/resource/skins/"
@@ -3998,6 +4057,7 @@ function App.Info.onLine(plain)
     App.Info.pending = nil
     d.id, d.at = d.id or p.id, os.clock()
     if d.name then App.Info.cache[d.name] = d end
+    if d.id then App.Info.byId[d.id] = d end
     if d.level and d.id then rememberLevel(d.id, d.level) end
     App.Info.data = d
     return true
@@ -4280,6 +4340,99 @@ function App.Info.draw()
     if imgui.IsItemHovered() then TIP(u8(tr("info_copy_tip"))) end
 end
 
+
+-- ------------------------------------------------------------
+-- FACTIUNEA ALIATA: licenta data unui membru al factiunii aliate se plateste inapoi, cu /pay.
+-- Factiunea jucatorului vine din raspunsul la /id, pe care helperul il citeste oricum.
+-- Suma e pretul licentei din fisierul de date, dupa nivelul lui (fara bonusul AR: acela vine
+-- de la factiune, nu din buzunarul jucatorului).
+-- Daca nu ti-ai deblocat banii cu /pin, plata asteapta si pleaca singura imediat ce dai /pin.
+-- ------------------------------------------------------------
+App.Ally = { queue = {} }
+
+-- factiunea aliata: intai alegerea ta din /sih, apoi cea din fisierul de date (pe oras)
+function App.Ally.who()
+    local pick = tostring(cfg.main.allyId or "")
+    if pick ~= "" then return pick end
+    local set = Data and Data.allies and Data.allies[tostring(cfg.main.factionId)]
+    if type(set) ~= "table" then return "" end
+    return tostring(set[tostring(cfg.main.faction)] or "")
+end
+
+-- e jucatorul in factiunea aliata? (dupa ce am retinut de la /id)
+function App.Ally.is(id, name)
+    local ally = App.Ally.who()
+    if ally == "" then return false end
+    local d = (name and App.Info.cache[name]) or (id and App.Info.byId[id])
+    if not d or not d.faction then return false end
+    return App.Info.factionId(d.faction) == ally
+end
+
+-- cat a platit jucatorul: pretul licentei la nivelul lui
+function App.Ally.amount(id, licId)
+    local lic = Licenses.byId[licId]
+    if not lic then return nil end
+    local level = playerLevel(id)
+    if not level then
+        local d = id and App.Info.byId[id]
+        level = d and d.level
+    end
+    if not level then return nil end
+    return licensePrice(lic, level)
+end
+
+-- apelat cand jucatorul a acceptat licenta (adica atunci cand banii au ajuns la tine)
+function App.Ally.onGiven(id, name, licId)
+    if not feat("allyPay") or not id then return end
+    if id == myPlayerId() then return end            -- /giveme: sunt banii mei
+    if not App.Ally.is(id, name) then return end
+    local sum = App.Ally.amount(id, licId)
+    if not sum or sum <= 0 then
+        trace("aliat: nu stiu pretul pentru " .. tostring(licId) .. " (nivel necunoscut)")
+        return
+    end
+    table.insert(App.Ally.queue, { id = id, name = name or playerName(id), sum = sum, at = os.clock() })
+    App.Ally.flush()
+end
+
+-- trimite ce se poate; ce nu (lipseste /pin) ramane in coada si pleaca mai tarziu
+function App.Ally.flush()
+    local held = 0
+    for i = #App.Ally.queue, 1, -1 do
+        local p = App.Ally.queue[i]
+        if os.clock() - p.at > K.ALLY_MAX_AGE then
+            table.remove(App.Ally.queue, i)
+            trace("aliat: plata expirata pentru " .. tostring(p.name))
+        elseif State.pinOk then
+            table.remove(App.Ally.queue, i)
+            Queue.push("/pay " .. p.id .. " " .. p.sum, K.ALLY_DELAY)
+            App.Ally.last = { id = p.id, name = p.name, sum = p.sum, at = os.clock() }
+            msg(tr("ally_paid", money(p.sum), nameTag(p.id, p.name)))
+            Notify.push(tr("ally_title"), tr("ally_paid_short", money(p.sum), tostring(p.name)))
+            trace("aliat: /pay " .. p.id .. " " .. p.sum)
+        else
+            held = held + 1
+        end
+    end
+    if held > 0 and (not App.Ally.warnedAt or os.clock() - App.Ally.warnedAt > K.ALLY_WARN) then
+        App.Ally.warnedAt = os.clock()
+        err(tr("ally_pin"))
+        Notify.push(tr("ally_title"), tr("ally_pin_short"))
+    end
+end
+
+-- serverul ne-a trimis la /pin dupa ce am incercat sa platim: punem plata inapoi in coada
+function App.Ally.onPinNeeded()
+    State.pinOk = false
+    local p = App.Ally.last
+    App.Ally.last = nil
+    if p and os.clock() - p.at < 15 then
+        table.insert(App.Ally.queue, { id = p.id, name = p.name, sum = p.sum, at = os.clock() })
+        trace("aliat: plata catre " .. tostring(p.name) .. " amanata, lipseste /pin")
+    end
+    App.Ally.warnedAt = nil
+    App.Ally.flush()
+end
 -- ------------------------------------------------------------
 -- GHIDUL DE PORNIRE: patru pasi la prima instalare (limba, factiunea, trei taste, gata).
 -- Se poate redeschide oricand din /sih -> General.
@@ -4559,7 +4712,7 @@ local function drawGeneralTab()
     end
 
     -- COMENZI
-    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", 20)) then
+    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", 21)) then
         guideLine("/sic",               tr("g_sic"))
         guideLine("/sih",               tr("g_sih"))
         guideLine("/withme <id> <1-6>", tr("g_withme"))
@@ -4574,6 +4727,7 @@ local function drawGeneralTab()
         guideLine("/notepad",           tr("g_notepad"))
         guideLine("/info <id>",         tr("g_info"))
         guideLine("/sicreset",          tr("g_sicreset"))
+        guideLine("/sicpay",            tr("g_sicpay"))
         guideLine("/giveme <1-6>",      tr("g_giveme"))
         guideLine("/acc /rl /sl <id>",  tr("g_shorts1"))
         guideLine("/gw /gm /gs /gf /gfl", tr("g_shorts2"))
@@ -6169,6 +6323,28 @@ local function onServerLine(color, text)
         elseif Need.onLevel(tonumber(level)) then return false end   -- /id-ul nostru automat: raspunsul nu se afiseaza
     end
 
+    -- ORICE raspuns la /id, chiar daca nu l-am cerut din fereastra /info: retinem nivelul si
+    -- factiunea jucatorului. De aici stim daca e dintr-o factiune aliata cand ii dam licenta.
+    if App and App.Info and text:find("Ping:", 1, true) then
+        local plain = text:gsub("{%x%x%x%x%x%x}", "")
+        local d = App.Info.parse(plain)
+        if d and d.name then
+            d.at = os.clock()
+            App.Info.cache[d.name] = d
+            if d.id then App.Info.byId[d.id] = d end
+        end
+    end
+
+    -- serverul ne trimite la /pin dupa o plata: o punem inapoi in coada si asteptam deblocarea
+    if App and App.Ally and App.Ally.last and text:find("/pin", 1, true) then
+        App.Ally.onPinNeeded()
+    end
+
+    -- deconectare: banii se blocheaza din nou pana la urmatorul /pin
+    if text:find("Server closed the connection", 1, true) or text:find("Lost connection", 1, true) then
+        State.pinOk = false
+    end
+
     -- raspunsul la /id cerut de fereastra /info: il folosim noi si nu se mai afiseaza in chat
     if App and App.Info and App.Info.pending then
         if App.Info.onLine((text:gsub("{%x%x%x%x%x%x}", ""))) then return false end
@@ -6377,6 +6553,17 @@ function sampev.onDisableCheckpoint()
     State.checkpoint = nil
 end
 -- raspunsul candidatului in chat (pentru pasul "answer" din checklist)
+
+-- comenzile trimise de tine: ne intereseaza doar /pin, ca sa stim cand ti-ai deblocat banii
+function sampev.onSendCommand(command)
+    local c = tostring(command or ""):lower()
+    if c:find("^/pin") and not State.pinOk then
+        State.pinOk = true
+        trace("pin introdus: platile catre aliati pot pleca")
+        Defer.push(function() if App and App.Ally then App.Ally.flush() end end)
+    end
+end
+
 function sampev.onPlayerChat(playerId, text)
     local id = Candidate.get()
     if id and playerId == id and Check.asked then Check.mark(id, "answer") end
@@ -6468,6 +6655,12 @@ local function registerCommands()
         App.Info.show(id)
     end)
     sampRegisterChatCommand("sicwizard", function() App.Wizard.start(true) end)
+    -- /sicpay: trimite acum platile catre aliati care asteptau deblocarea banilor
+    sampRegisterChatCommand("sicpay", function()
+        if #App.Ally.queue == 0 then msg(tr("ally_none_due")) return end
+        State.pinOk = true
+        App.Ally.flush()
+    end)
     sampRegisterChatCommand("sicreset", function() App.resetLayout() end)
     -- notitele: aceeasi fereastra pe /notepad, /note sau /notite
     for _, name in ipairs({ "notepad", "note", "notite" }) do

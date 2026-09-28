@@ -22,6 +22,9 @@ Deocamdata acopera doar aceasta factiune; celelalte se adauga treptat.
 - **`/giveme`** — licentele pentru tine (renew): trimite `/givelicense` pe id-ul tau si accepta singur ce ofera serverul.
 - **`/withme`** — anunt pe `/f` in formatul factiunii, cu subtotalul licentelor si bonusul AR.
 - **`/notepad`** — notitele tale, pe foldere: le trimiti in chat exact cum sunt scrise (text sau comanda)
+- **Factiune aliata** — licenta data unui membru al factiunii aliate se plateste inapoi singura, cu
+  `/pay`, imediat ce jucatorul o accepta (SF School Instructors sunt aliati cu Paramedics). Daca
+  nu ti-ai deblocat banii cu `/pin`, plata asteapta si pleaca imediat ce o faci.
 - **`/info <id>`** — buletinul jucatorului: nivel, ping, FPS, factiunea cu numele rangului, licentele,
   distanta si vehiculul, plus notitele tale despre el (etichete si text liber, salvate pe nume).
   sau le copiezi. Se deschid si din `/sih`, de pe bara de iconite sau de pe o tasta.

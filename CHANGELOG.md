@@ -2,6 +2,19 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
+## [Nepublicat]
+
+### Adaugat
+- **Factiune aliata**: cand dai o licenta unui membru al factiunii aliate, helperul ii trimite
+  pretul inapoi cu `/pay`, imediat ce jucatorul accepta licenta. Factiunea lui se afla din
+  raspunsul la `/id` (pe care helperul il citea oricum), iar suma e pretul din fisierul de date,
+  la nivelul lui, fara bonusul AR - acela vine de la factiune, nu din buzunarul jucatorului.
+  Aliatul implicit e in `config/SICHelper_data.lua` (`data.allies`; SF School Instructors ->
+  Paramedics) si se poate schimba din `/sih` -> Features. Oprit din start.
+  Daca nu ti-ai deblocat banii cu `/pin`, plata asteapta, te anunta pe ecran si pleaca singura
+  imediat ce dai `/pin`; `/sicpay` o trimite pe loc.
+
+
 ## [1.6.0-beta] — 2026-09-28
 
 ### Adaugat

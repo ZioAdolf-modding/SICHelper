@@ -276,6 +276,16 @@ data.rank_zero    = "Rang 0 (da testul de intrare)"
 -- ------------------------------------------------------------
 data.player_tags = { "posthunter", "baiat de treaba", "cere des", "atent", "de evitat" }
 
+-- ------------------------------------------------------------
+-- FACTIUNEA ALIATA: cui dai banii inapoi pe licente.
+-- Cheia de sus e factiunea ta, iar inauntru orasul (la factiunile care au orase).
+-- Gol = nu ai aliat. Aliatul se poate alege si din /sih -> Features, fara sa umbli aici.
+-- Exemplu: SF School Instructors sunt aliati cu Paramedics, deci banii pe licenta se intorc.
+-- ------------------------------------------------------------
+data.allies = {
+    si = { SF = "paramedics", LS = "", LV = "" },
+}
+
 data.ranks = {
     si = {
         [7] = "Boss", [6] = "Under Boss", [5] = "Manager", [4] = "Supervisor",
