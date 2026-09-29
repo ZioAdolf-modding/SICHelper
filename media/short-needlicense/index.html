@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SICHelper Short</title>
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  @font-face { font-family: 'FA6'; font-weight: 900; src: url('assets/fonts/fa-solid-900.ttf') format('truetype'); }
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; width: 1080px; height: 1920px; }
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 8px; background: rgba(0,0,0,.7); color: #cfe; font: 14px Inter, sans-serif; display: none; }
+  body.preview #bar { display: flex; gap: 10px; align-items: center; }
+  body.preview canvas { width: 540px; height: 960px; }
+  #bar input { flex: 1; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<div id="bar"><button id="play">Play</button><input id="seek" type="range" min="0" max="60" step="0.0333" value="0"><span id="tt">0.00</span></div>
+<script src="src/core.js"></script>
+<script src="src/ui.js"></script>
+<script src="src/world.js"></script>
+<script src="src/scenes.js"></script>
+<script>
+  // previzualizare in browser: index.html?preview
+  if (location.search.includes('preview')) {
+    document.body.classList.add('preview');
+    SHORT.ready.then(() => {
+      const seek = document.getElementById('seek'), tt = document.getElementById('tt');
+      let playing = false, t0 = 0, base = 0;
+      const show = t => { SHORT.render(t); seek.value = t; tt.textContent = t.toFixed(2); };
+      seek.oninput = () => { playing = false; show(+seek.value); };
+      document.getElementById('play').onclick = () => { playing = !playing; t0 = performance.now(); base = +seek.value; loop(); };
+      function loop() { if (!playing) return; const t = base + (performance.now() - t0) / 1000; if (t >= 60) { playing = false; return; } show(t); requestAnimationFrame(loop); }
+      show(0);
+    });
+  }
+</script>
+</body>
+</html>

@@ -18,3 +18,7 @@ moonloader/resource/skins/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# short-ul: cadrele / sunetul intermediar si fonturile descarcate
+media/short-needlicense/out/
+media/short-needlicense/assets/
