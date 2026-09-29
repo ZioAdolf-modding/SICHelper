@@ -20,9 +20,11 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   la alte factiuni pleaca neschimbate la server.
   Tot ce tine de server sta in `config/SICHelper_pd.lua` (comenzi, texte, randurile din dialoguri,
   praguri); codul e in `moonloader/SICHelper/pd.lua`.
-- **Interfata dintr-un click**: `/sih` → General → Interfata (School Instructors / Departamente). Se
-  schimba statia din bara de iconite (`/sic` / `/pdc`), bind-urile afisate, comenzile, tutorialul,
-  etichetele din `/info` si culorile. `/pdh` deschide aceleasi setari ca `/sih`.
+- **Interfata dintr-un click**: sus in `/sih` → General → Interfata (School Instructors / Departamente),
+  sau factiunea din lista. Se schimba statia (`/sic` si slotul din bara de iconite deschid statia PD la
+  departamente), bind-urile afisate, comenzile, tutorialul, etichetele din `/info` si culorile; statia
+  PD se deschide imediat si un mesaj in chat confirma schimbarea. Titlul din `/sih` arata factiunea.
+  `/pdh` deschide aceleasi setari ca `/sih`.
 - **Factiune aliata**: cand dai o licenta unui membru al factiunii aliate, helperul ii trimite
   pretul inapoi cu `/pay`, imediat ce jucatorul accepta licenta. Factiunea lui se afla din
   raspunsul la `/id` (pe care helperul il citea oricum), iar suma e pretul din fisierul de date,

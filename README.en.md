@@ -2,7 +2,8 @@
 
 CMD helper for B-Zone RPG (SA:MP), written in Lua, for MoonLoader. It covers **School Instructors**
 and the **departments** (Police Department, FBI, National Guard); other factions will be added gradually.
-The interface switches in one click, from `/sih` (or `/pdh`) → General → Interface.
+The interface switches in one click, at the top of `/sih` (or `/pdh`) → General → Interface; for the
+departments `/sic` opens the PD station too.
 
 **Version:** 1.6.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
 

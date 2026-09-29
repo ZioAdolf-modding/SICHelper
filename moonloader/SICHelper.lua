@@ -604,6 +604,8 @@ local L = {
         wiz_pd2 = "alege suspectul: din radar, dupa ID sau cel mai apropiat; nivelul se afla singur cu /id",
         wiz_pd3 = "un click pe abatere: helperul spune textul si da comanda potrivita nivelului, dupa regulament",
         wiz_open_pdc = "Deschide /pdc",
+        iface_now_pd = "Interfata: Departamente. %s (sau /sic) deschide statia PD; setarile raman in /sih sau /pdh.",
+        iface_now_si = "Interfata: School Instructors. /sic deschide fereastra de teste.",
     },
     [K.LANG_EN] = {
         tab_general = "General", tab_binds = "Binds",
@@ -856,6 +858,8 @@ local L = {
         wiz_pd2 = "pick the suspect: from the radar, by ID or the nearest one; the level comes by itself from /id",
         wiz_pd3 = "one click on the offence: the helper says the text and sends the command that fits the level, by the rules",
         wiz_open_pdc = "Open /pdc",
+        iface_now_pd = "Interface: Departments. %s (or /sic) opens the PD station; settings stay in /sih or /pdh.",
+        iface_now_si = "Interface: School Instructors. /sic opens the test window.",
     },
 }
 
@@ -3875,6 +3879,53 @@ end
 -- ============================================================
 App = { Ver = {}, Info = {}, Wizard = {} }
 
+-- schimbarea factiunii (combo, ghid, Interfata): tema, statia potrivita si un mesaj clar in chat.
+-- quiet = fara ferestre deschise / inchise (din ghidul de pornire)
+function App.setFaction(id, quiet)
+    local f = Factions.byId[id]
+    if not f then return end
+    local wasDept = App.PD ~= nil and App.PD.isDept()
+    cfg.main.factionId, cfg.main.theme = f.id, f.theme
+    saveCfg()
+    applyTheme()
+    if not App.PD then
+        if id == "pd" or id == "fbi" or id == "ng" then err(tr("pd_missing", tostring(App.PDError))) end
+        return
+    end
+    local dept = App.PD.isDept()
+    if dept and not wasDept then
+        if not quiet then State.sic[0], App.PD.open[0] = false, true end
+        msg(tr("iface_now_pd", App.PD.command()))
+    elseif wasDept and not dept then
+        if not quiet then App.PD.open[0] = false end
+        msg(tr("iface_now_si"))
+    end
+    trace("factiune: " .. tostring(id) .. (dept and " (departament)" or ""))
+end
+
+-- randul Interfata, sus in /sih -> General: un click schimba statia, comenzile, bind-urile, tutorialul si culorile
+function App.ifaceRow()
+    local dept = App.PD ~= nil and App.PD.isDept()
+    TC(DIM, u8(string.upper(tr("iface"))))
+    imgui.SameLine()
+    local w = (imgui.GetContentRegionAvail().x - imgui.GetStyle().ItemSpacing.x) / 2
+    local siLabel = (State.icons and (fa.GRADUATION_CAP .. "  ") or "") .. u8(tr("iface_si"))
+    if toggleButton(siLabel .. "##ifsi", cfg.main.factionId == "si", imgui.ImVec2(w, px(30))) and cfg.main.factionId ~= "si" then
+        App.setFaction("si")
+    end
+    if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
+    imgui.SameLine()
+    local pdLabel = (State.icons and (fa.SHIELD_HALVED .. "  ") or "") .. u8(tr("iface_pd"))
+    if toggleButton(pdLabel .. "##ifpd", dept, imgui.ImVec2(w, px(30))) and not dept then App.setFaction("pd") end
+    if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
+    if App.PDError then
+        imgui.PushStyleColor(imgui.Col.Text, RED)
+        TW(u8(tr("pd_missing", App.PDError)))
+        imgui.PopStyleColor()
+    end
+    imgui.Spacing()
+end
+
 -- conditia de asezare a ferestrelor: normal "prima data", dar o jumatate de secunda dupa
 -- "Reseteaza aranjamentul" devine "intotdeauna", ca tot ce e pe ecran sa sara la locul implicit
 function App.cond()
@@ -4588,9 +4639,7 @@ function App.Wizard.draw()
                 local r, g, b = hexToRgb(f.hex)
                 imgui.PushStyleColor(imgui.Col.Text, V4(math.max(r, 0.35), math.max(g, 0.35), math.max(b, 0.35)))
                 if imgui.Selectable(u8(f.label) .. "##wf" .. f.id, f.id == myFaction.id) then
-                    cfg.main.factionId, cfg.main.theme = f.id, f.theme
-                    saveCfg()
-                    applyTheme()
+                    App.setFaction(f.id, true)
                 end
                 imgui.PopStyleColor()
             end
@@ -4658,6 +4707,7 @@ local function drawGeneralTab()
     local currentTheme = Themes.byId[cfg.main.theme] or Themes.byId.si
 
     App.Ver.row()
+    App.ifaceRow()
 
     -- cautare peste toate setarile din toate tab-urile
     State.searchBuf = State.searchBuf or new.char[64]()
@@ -4700,10 +4750,7 @@ local function drawGeneralTab()
                 local r, g, b = hexToRgb(f.hex)
                 imgui.PushStyleColor(imgui.Col.Text, V4(math.max(r, 0.35), math.max(g, 0.35), math.max(b, 0.35)))
                 if imgui.Selectable(u8(f.label) .. "##fac" .. f.id, f.id == myFaction.id) then
-                    cfg.main.factionId = f.id
-                    cfg.main.theme = f.theme       -- tema urmeaza factiunea; se poate schimba separat mai jos
-                    saveCfg()
-                    applyTheme()
+                    App.setFaction(f.id)       -- tema si statia urmeaza factiunea; tema se poate schimba separat mai jos
                 end
                 imgui.PopStyleColor()
             end
@@ -4719,26 +4766,6 @@ local function drawGeneralTab()
         local used, need = imgui.GetCursorScreenPos().y - secTop, px(K.FACTION_BADGE) + 8
         if used < need then imgui.Dummy(imgui.ImVec2(0, need - used)) end
         drawFactionEmblem(myFaction, emblemLeft, secTop, imgui.GetCursorScreenPos().y)
-        -- interfata dintr-un click: School Instructors (/sic) sau departamente (/pdc)
-        if App.PD then
-            labeled(tr("iface"))
-            local dept = App.PD.isDept()
-            if toggleButton(u8(tr("iface_si")) .. "##ifsi", not dept and myFaction.id == "si", imgui.ImVec2(px(170), 22)) then
-                cfg.main.factionId, cfg.main.theme = "si", Factions.byId.si.theme
-                saveCfg()
-                applyTheme()
-            end
-            if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
-            imgui.SameLine()
-            if toggleButton(u8(tr("iface_pd")) .. "##ifpd", dept, imgui.ImVec2(px(170), 22)) and not dept then
-                cfg.main.factionId, cfg.main.theme = "pd", Factions.byId.pd.theme
-                saveCfg()
-                applyTheme()
-            end
-            if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
-        elseif App.PDError then
-            TC(RED, u8(tr("pd_missing", App.PDError)))
-        end
     end
 
     -- TASTELE MELE
@@ -4972,7 +4999,8 @@ imgui.OnFrame(function() return State.focused and (State.sih[0] or State.sihFade
     imgui.SetNextWindowSize(imgui.ImVec2(px(680), px(740)), App.cond())
 
     imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
-    imgui.Begin("SICHelper  v" .. VERSION .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
+    local facLabel = (Factions.byId[cfg.main.factionId] or Factions.byId.si).label
+    imgui.Begin("SICHelper  v" .. VERSION .. "  -  " .. u8(facLabel) .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
     State.textInput = imgui.GetIO().WantTextInput
 
     -- bara de tab-uri, cu hint-ul ESC aliniat la dreapta
@@ -6744,7 +6772,9 @@ local function registerCommands()
         sampRegisterChatCommand(name, function() State.sih[0] = not State.sih[0] end)
     end
 
+    -- /sic: statia factiunii tale (la departamente, statia PD)
     sampRegisterChatCommand("sic", function()
+        if App.PD and App.PD.isDept() then App.PD.toggle() return end
         State.sic[0] = not State.sic[0]
     end)
 

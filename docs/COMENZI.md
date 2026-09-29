@@ -7,7 +7,7 @@ Ce ajunge la server sunt comenzile din coloana „trimite".
 
 | Comanda | Ce face | Trimite |
 |---|---|---|
-| `/sic` | fereastra de teste (taburi pe licente + 50+) | — |
+| `/sic` | fereastra de teste (taburi pe licente + 50+); la departamente, statia PD | — |
 | `/sih` | setari: limba, factiune, feature-uri, bind-uri, tutorial | — |
 | `/withme <id> <1-6>` | anunta candidatul pe `/f`, cu subtotal si bonus AR | `/id`, apoi `/f ...` |
 | `/withme` | deschide fereastra (alegi id + licente) | — |
@@ -54,7 +54,7 @@ Scurtaturile generale (`/m`, `/cm`, `/sv`, `/sj`, `/ha`, `/ra`...) sunt oprite i
 ## Departamente (PD / FBI / NG)
 
 Merg cand factiunea din `/sih` e Police Department, FBI sau National Guard (sau un click pe
-**Departamente** la General → Interfata). La alte factiuni, scurtaturile de mai jos pleaca neschimbate
+**Departamente**, sus in `/sih` → General → Interfata). Atunci si `/sic` deschide statia PD. La alte factiuni, scurtaturile de mai jos pleaca neschimbate
 la server. Fara id, lucreaza pe suspectul din statie; nivelul se afla singur cu `/id`.
 
 | Comanda | Ce face | Trimite |
