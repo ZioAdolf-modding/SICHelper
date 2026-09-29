@@ -5,6 +5,26 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
 ## [Nepublicat]
 
 ### Adaugat
+- **Departamente (Police Department / FBI / National Guard)**: statia de control **`/pdc`**.
+  Alegi suspectul (din radar, dupa ID, cel mai apropiat sau din lista jucatorilor din jur), helperul
+  ii afla nivelul cu `/id`, iar fiecare buton face o singura actiune, dupa nivel si regulament:
+  1-3 doar avertisment, 4-7 alege amenda sau permisul (butoanele apar in statie), 8+ amenda si permis.
+  Tab-uri: Rutier (viteza din radar sau manual, faruri, carosabil, alcoolemie, NOS, contrasens,
+  parcare, hidraulice), Wanted (`/su` cu randul ales singur in dialog), Control (control de rutina,
+  arme / droguri / materiale, cuff / arrest, custodia pe `/d`), Radar (zona, limita, „zona libera?" de
+  3 ori la minim 10 s, acord pentru alt oras, start / stop + find / reia, lista celor prinsi) si
+  Dispecerat (duty, FVR pe `/r` si `/d`, patrulare in alt oras, AFK 3 min / 30 s).
+  Verificarile de regulament (3 somatii in 5 minute + 30 s, `/frisk` pentru droguri, intrebarile de
+  radar, radarul doar cu masina oprita) nu blocheaza: te avertizeaza, iar al doilea click trimite oricum.
+  Scurtaturile din PDHelper V7.5 by TheTom au aceleasi nume (`/aa`, `/nos`, `/nec`, `/mm`, `/sl`, `/ll`...);
+  la alte factiuni pleaca neschimbate la server.
+  Tot ce tine de server sta in `config/SICHelper_pd.lua` (comenzi, texte, randurile din dialoguri,
+  praguri); codul e in `moonloader/SICHelper/pd.lua`.
+- **Interfata dintr-un click**: sus in `/sih` → General → Interfata (School Instructors / Departamente),
+  sau factiunea din lista. Se schimba statia (`/sic` si slotul din bara de iconite deschid statia PD la
+  departamente), bind-urile afisate, comenzile, tutorialul, etichetele din `/info` si culorile; statia
+  PD se deschide imediat si un mesaj in chat confirma schimbarea. Titlul din `/sih` arata factiunea.
+  `/pdh` deschide aceleasi setari ca `/sih`.
 - **Factiune aliata**: cand dai o licenta unui membru al factiunii aliate, helperul ii trimite
   pretul inapoi cu `/pay`, imediat ce jucatorul accepta licenta. Factiunea lui se afla din
   raspunsul la `/id` (pe care helperul il citea oricum), iar suma e pretul din fisierul de date,

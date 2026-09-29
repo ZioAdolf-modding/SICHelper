@@ -1,7 +1,8 @@
 # SICHelper — pentru staff si conducerea factiunii
 
-Documentul asta e scris ca sa poata fi verificat, nu ca sa convinga. Tot codul e in repo, intr-un
-singur fisier (`moonloader/SICHelper.lua`), si poate fi citit linie cu linie.
+Documentul asta e scris ca sa poata fi verificat, nu ca sa convinga. Tot codul e in repo si poate fi
+citit linie cu linie: `moonloader/SICHelper.lua` (helperul) si `moonloader/SICHelper/pd.lua` (partea
+pentru departamente). Textele si comenzile trimise stau in fisierele de date din `moonloader/config/`.
 
 ## Ce este
 
@@ -32,7 +33,27 @@ Tot ce trimite pleaca prin chatul normal (`sampSendChat`), exact cum ar scrie ju
 | `/giveme` (licentele pentru tine) | `/givelicense <id-ul tau> <licenta>`, apoi `/accept license <id-ul tau>` |
 | cu un checkpoint activ, inainte de accept | `/cancel find`, `/killcp` (optional) |
 | Repair / refill | `/switchjob`, `/repair`, `/refill`, `/switchjob` |
-| FVR | anunt pe `/f` si `/sx`, apoi `/fvr` |
+| FVR | anunt pe `/f` si `/sx` (la departamente pe `/r` si `/d`), apoi `/fvr` |
+
+### Departamente (PD / FBI / NG), statia `/pdc`
+
+| Cand | Ce trimite |
+|---|---|
+| alegi un suspect al carui nivel nu e cunoscut | `/id <id>` (raspunsul ramane in chat: e si dovada nivelului) |
+| un buton / o scurtatura de sanctiune | linia catre jucator (textul din `config/SICHelper_pd.lua`), apoi, dupa nivel: nimic (avertisment), `/ticket <id>`, `/confiscate <id> drivinglic <ore>` sau `/confiscate <id> <obiect>` |
+| nivel 4-7, dupa ce jucatorul alege | varianta aleasa, dintr-un buton apasat de politist |
+| butoanele de wanted / `/nec`, `/run`... | `/su <id>` |
+| dupa `/ticket` sau `/su` trimis de tine | alege randul potrivit in dialogul serverului si apasa butonul (se poate lasa doar selectat sau opri) |
+| somatie / control / teren guvernamental | `/m ...` / textul + `/frisk <id>` / doua linii in chat |
+| radar | `/d` (zona libera? / acord / pornire / reluare), `/startradar`, `/stopradar`, `/find`, `/cancel find` |
+| cuff / arrest / eject / find | `/cuff`, `/uncuff`, `/arrest`, `/eject`, `/find <id>` |
+| duty, patrulare, AFK, nefondat, custodie | `/pin`, `/duty`, `/heal`; linii pe `/d` |
+
+Statia **nu aresteaza, nu da cuff si nu da frisk singura**: nu exista arest automat cand intri intr-o
+zona de arrest (butonul doar se aprinde), nici frisk pe toti din jur. Verificarile de regulament (3
+somatii in 5 minute si 30 s de asteptare inainte de neconformare, `/frisk` inainte de droguri, 3
+intrebari pe `/d` la minim 10 s inainte de radar, radarul doar cu masina oprita) avertizeaza; al doilea
+click, in 4 secunde, trimite oricum, pe raspunderea politistului.
 
 Textele nu sunt „inventate" de script: stau in `moonloader/config/SICHelper_data.lua`, un fisier
 de date pe care oricine il poate citi si edita. Testele sunt cele oficiale, preluate din helperul lui
@@ -49,7 +70,11 @@ Intre comenzi exista o pauza reglabila (implicit ~1 secunda) ca sa nu se trimita
 - **HP-ul vehiculului candidatului**, doar in timpul unei lectii de Flying sau Sailing, doar pentru
   jucatorul cu care faci lectia, ca sa te anunte cand a scazut sub 950 (conditia de picare). E singura
   citire din memoria jocului si se poate opri din `/sih` → Features → „HP vehicul live";
-- **pozitia ta si a candidatului** (pentru distanta afisata in HUD) si checkpoint-ul pus de server.
+- **pozitia ta si a candidatului** (pentru distanta afisata in HUD) si checkpoint-ul pus de server;
+- la departamente: **linia radarului** (numele, id-ul, nivelul, viteza, limita), **pozitia jucatorilor
+  din jur** (lista din statie, cel mai apropiat) si **modelul vehiculului** in care e suspectul, doar
+  pentru jucatorii streamati langa tine (aceeasi citire ca in `/info`); textul si pozitia randurilor din
+  dialogurile `/ticket` si `/su`, dupa ce le-ai deschis tu.
 
 ## Ce NU face
 
@@ -75,8 +100,11 @@ Intre comenzi exista o pauza reglabila (implicit ~1 secunda) ca sa nu se trimita
 
 - tot codul: `moonloader/SICHelper.lua`, cu comentarii in romana;
 - ce trimite: cauta in fisier `Queue.push` si `sampSendChat` — fiecare comanda trimisa trece pe acolo;
-- ce citeste din memorie: cauta `readMemory` — apare in doua linii alaturate, la HP-ul vehiculului;
-- fara retea: cauta `http`, `socket`, `require("socket")` — nu exista.
+- ce trimite statia PD: cauta `Queue.push` si `PD.say` in `moonloader/SICHelper/pd.lua`;
+- ce citeste din memorie: cauta `readMemory` — HP-ul vehiculului candidatului si, in `/info` (folosit si
+  de statia PD), skin-ul si vehiculul unui jucator streamat langa tine;
+- retea: singura conexiune e verificarea de versiune (fisierul `VERSION` de pe GitHub), care se opreste
+  din Features; cauta `downloadUrlToFile` — nu exista altele (`socket`, `http`).
 
 Daca vreti o functie oprita implicit sau scoasa cu totul pentru instructori, spuneti-mi care si o fac;
 fiecare automatizare are deja un comutator ON/OFF in `/sih` → Features.

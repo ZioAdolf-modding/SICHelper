@@ -1,7 +1,9 @@
 # SICHelper
 
-CMD helper pentru **School Instructors** pe B-Zone RPG (SA:MP). Scris in Lua, pentru MoonLoader.
-Deocamdata acopera doar aceasta factiune; celelalte se adauga treptat.
+CMD helper pentru B-Zone RPG (SA:MP), scris in Lua, pentru MoonLoader. Acopera **School Instructors**
+si **departamentele** (Police Department, FBI, National Guard); celelalte factiuni se adauga treptat.
+Interfata se schimba dintr-un click, sus in `/sih` (sau `/pdh`) → General → Interfata; la departamente
+si `/sic` deschide statia PD.
 
 **Versiune:** 1.6.0-beta · **Autor:** ZioAdolf (Discord: `vlandrewz`) · **Licenta:** GPL-3.0-or-later
 
@@ -34,6 +36,27 @@ Deocamdata acopera doar aceasta factiune; celelalte se adauga treptat.
 - **Altele** — stoplesson automat, repair/refill silentios, redenumirea screenshot-urilor,
   teme de culori pe factiune, interfata care se scaleaza dupa rezolutie.
 
+### Pentru departamente (PD / FBI / NG)
+
+- **`/pdc`** — statia de control: alegi **suspectul** (din radar, dupa ID, cel mai apropiat sau din lista
+  jucatorilor din jur), helperul ii afla nivelul cu `/id`, iar fiecare buton face o singura actiune,
+  potrivita nivelului si regulamentului. Tab-uri: Rutier, Wanted, Control, Radar, Dispecerat.
+- **Sanctiuni dupa nivel** — 1-3 doar avertisment, 4-7 alege (amenda sau permis: butoanele apar in statie
+  dupa ce raspunde), 8+ amenda si permis. Textul spus jucatorului si comenzile (`/ticket`, `/confiscate`)
+  se vad in tooltip inainte sa apesi.
+- **Radar** — zona si limita, „Zona libera?" de 3 ori pe `/d` (cu pauza minima de 10 s), acordul pentru
+  alt oras, pornire doar cu masina oprita, un buton care porneste / opreste + `/find` pe cel prins / reia.
+  Cei prinsi apar in lista, cu viteza, limita si ce sanctiune li se potriveste.
+- **Wanted (`/su`)** — neconformare, runner, atac politist, droguri, neplata, complice, nefondat. Helperul
+  numara somatiile (3 in 5 minute, apoi 30 s) si tine minte `/frisk`-ul pentru droguri; daca regula nu e
+  indeplinita te avertizeaza, iar al doilea click trimite oricum.
+- **Dialogurile `/ticket` si `/su`** — randul potrivit e ales dupa text (sau pozitie) si scris in chat;
+  se poate lasa doar selectat sau opri de tot.
+- **Scurtaturile din PDHelper** — `/aa`, `/nos`, `/con`, `/parc`, `/nec`, `/run`, `/mm`, `/cl`, `/sl`,
+  `/ll`, `/potls`, `/afk`, `/hdt`... cu aceleasi nume.
+- Tot ce tine de server (comenzi, texte, randurile din dialoguri, pragurile) sta in
+  `moonloader/config/SICHelper_pd.lua`, ca sa poata fi schimbat fara cod (sau folosit pe alt server).
+
 Lista completa de comenzi e in joc: `/sih` → General → **Comenzi**, si in [docs/COMENZI.md](docs/COMENZI.md).
 
 ## Instalare
@@ -54,14 +77,18 @@ CLEO nu e necesar.
 2. Trage folderul `moonloader` peste folderul jocului si **suprascrie cand te intreaba** - inclusiv
    `moonloader/lib/fAwesome6_solid.lua`, care trebuie sa fie cel din arhiva (iconitele mari).
 3. In joc: **Ctrl + R** (reincarca scripturile) sau reporneste jocul.
-4. `/sih` → General → alege-ti factiunea si orasul.
+4. `/sih` → General → alege-ti factiunea si orasul (sau, la Interfata, un click pe School Instructors /
+   Departamente).
+
+Daca ai folosit PDHelper (CLEO), scoate `PDHelperV7.5.cs` din folderul `cleo`: are aceleasi comenzi.
 
 Configul se creeaza singur: `moonloader/config/SIC_Helper.ini`.
 
 ## Alte factiuni
 
-**Deocamdata helperul e facut pentru School Instructors.** Comenzile, testele, preturile si
-procedurile din el sunt ale acestei factiuni. Celelalte se adauga treptat, una cate una.
+**Deocamdata helperul e facut pentru School Instructors si departamente (PD / FBI / NG).** Celelalte
+factiuni se adauga treptat, una cate una. Interfata urmeaza factiunea aleasa in `/sih`: statia din bara
+de iconite (`/sic` sau `/pdc`), comenzile scurte, bind-urile, tutorialul si culorile.
 
 Terenul e insa pregatit: interfata nu e legata de o anume factiune (o alegi din `/sih` — toate cele
 de pe rpg.b-zone.ro sunt in lista, cu culorile si numele rangurilor lor), iar textele, preturile si
@@ -82,6 +109,9 @@ Pe scurt: helperul **scrie comenzi in locul tau**, nimic mai mult. Detaliat, in
 - nu citeste si nu modifica memoria altor jucatori in afara unui singur caz: HP-ul vehiculului
   candidatului in timpul lectiilor practice, ca sa stii cand a picat testul;
 - nu ascunde nimic de server: fiecare comanda pleaca prin chatul normal, exact cum ai scrie-o tu;
+- la departamente nu aresteaza, nu da cuff si nu da frisk singur: fiecare comanda pleaca dintr-un click
+  sau o tasta; singurul lucru facut fara click e alegerea randului in dialogul `/ticket` / `/su`
+  deschis chiar de click-ul tau (se poate opri);
 - nu are auto-aim, auto-drive, teleport, spawn, money hack sau orice alta functie de trisare;
 - singurul lucru ascuns vizual este mesajul de distanta al serverului, cat timp helperul afiseaza
   aceeasi informatie in HUD-ul lui (se poate opri).
@@ -99,6 +129,9 @@ sa pastreze creditele**. Vezi si [TRADEMARK.md](TRADEMARK.md) pentru nume si log
   `/sw`, `/sm`, `/ss`, `/sf`, `/sfl`, `/w1..`, `/m1..`, `/f1..`, `/lsfl1..`, `/ccc` si scurtaturile
   generale) pastreaza aceleasi nume ca la el. SICHelper e scris de la zero, pe structura de comenzi cu
   care instructorii erau deja obisnuiti.
+- **TheTom** — PDHelper V7.5, helperul folosit pana acum la departamente. Scurtaturile (`/aa`, `/nos`,
+  `/nec`, `/mm`, `/sl`, `/ll`, `/potls`, `/afk`, `/hdt`...), textele spuse jucatorilor si pozitia
+  randurilor din dialogurile `/ticket` si `/su` vin din helperul lui. Statia `/pdc` e scrisa de la zero.
 - **urShadow** — [mimgui](https://github.com/THE-FYP/SAMP.Lua) si `samp.events`.
 - **FYP** — MoonLoader si ML-ReloadAll.
 - **FlaCode & Cosmo** — HassleHUD (inspiratie pentru HUD).

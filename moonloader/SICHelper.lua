@@ -1,5 +1,5 @@
 -- ============================================================
--- SICHelper - CMD helper pentru School Instructors (B-Zone RPG / SA:MP)
+-- SICHelper - CMD helper pentru School Instructors si departamente (B-Zone RPG / SA:MP)
 -- Copyright (C) 2026 ZioAdolf (Discord: vlandrewz)
 --
 -- Sursa oficiala: https://github.com/ZioAdolf-modding/SICHelper
@@ -17,7 +17,7 @@
 script_name("SICHelper")
 local VERSION = "1.6.0-beta"
 script_version(VERSION)
-script_description("School Instructors CMD Helper - /sic, /sih, /withme, /sxwas, bind-uri")
+script_description("CMD Helper B-Zone - School Instructors (/sic) si departamente PD / FBI / NG (/pdc), /sih, bind-uri")
 
 -- ============================================================
 -- REQUIRES
@@ -330,6 +330,10 @@ local defaultConfig = {
     custom = {
         count = 0,
     },
+    -- statia pentru departamente (/pdc): zona si limita radarului, orasul lui, dialogurile /ticket /su
+    pd = {
+        zone = "", limit = 100, city = "", pick = "",
+    },
 }
 
 local cfg = inicfg.load(defaultConfig, K.CFG_FILE)
@@ -591,6 +595,17 @@ local L = {
         chain = "Continui automat cu: %s",
         tab_fly = "Flying", tab_sail = "Sailing", tab_fish = "Fishing", tab_weap = "Weapons",
         tab_mat = "Materials", tab_lvl50 = "Level 50+",
+        -- departamente (modulul PD)
+        grp_pd = "Departamente (PD / FBI / NG)", iface = "Interfata",
+        iface_si = "School Instructors  (/sic)", iface_pd = "Departamente  (/pdc)",
+        iface_tip = "Un click schimba tot: factiunea, culorile, statia din bara de iconite, comenzile scurte, bind-urile si tutorialul.",
+        pd_missing = "Modulul pentru departamente nu s-a incarcat (%s). Restul helperului merge normal.",
+        wiz_pd1 = "da /duty (sau Duty din statie, tab-ul Dispecerat)",
+        wiz_pd2 = "alege suspectul: din radar, dupa ID sau cel mai apropiat; nivelul se afla singur cu /id",
+        wiz_pd3 = "un click pe abatere: helperul spune textul si da comanda potrivita nivelului, dupa regulament",
+        wiz_open_pdc = "Deschide /pdc",
+        iface_now_pd = "Interfata: Departamente. %s (sau /sic) deschide statia PD; setarile raman in /sih sau /pdh.",
+        iface_now_si = "Interfata: School Instructors. /sic deschide fereastra de teste.",
     },
     [K.LANG_EN] = {
         tab_general = "General", tab_binds = "Binds",
@@ -834,6 +849,17 @@ local L = {
         chain = "Continuing automatically with: %s",
         tab_fly = "Flying", tab_sail = "Sailing", tab_fish = "Fishing", tab_weap = "Weapons",
         tab_mat = "Materials", tab_lvl50 = "Level 50+",
+        -- departments (PD module)
+        grp_pd = "Departments (PD / FBI / NG)", iface = "Interface",
+        iface_si = "School Instructors  (/sic)", iface_pd = "Departments  (/pdc)",
+        iface_tip = "One click switches everything: faction, colours, the station in the icon bar, the short commands, the binds and the tutorial.",
+        pd_missing = "The departments module did not load (%s). The rest of the helper works normally.",
+        wiz_pd1 = "type /duty (or Duty in the station, Dispatch tab)",
+        wiz_pd2 = "pick the suspect: from the radar, by ID or the nearest one; the level comes by itself from /id",
+        wiz_pd3 = "one click on the offence: the helper says the text and sends the command that fits the level, by the rules",
+        wiz_open_pdc = "Open /pdc",
+        iface_now_pd = "Interface: Departments. %s (or /sic) opens the PD station; settings stay in /sih or /pdh.",
+        iface_now_si = "Interface: School Instructors. /sic opens the test window.",
     },
 }
 
@@ -1556,12 +1582,13 @@ function Duty.set(state)
     local before = Duty.state
     Duty.state = state
     if before == state or not feat("dutyWindows") then return end
+    local dept = App and App.PD and App.PD.isDept()
     if state == true then
-        if feat("dutyWinSic")    then State.sic[0] = true end
+        if feat("dutyWinSic")    then if dept then App.PD.open[0] = true else State.sic[0] = true end end
         if feat("dutyWinReport") then Report.open[0] = true end
         if feat("dutyWinWithme") then Withme.ask(Candidate.get() or nearestPlayer()) end
     elseif before == true then
-        if feat("dutyWinSic")    then State.sic[0] = false end
+        if feat("dutyWinSic")    then if dept then App.PD.open[0] = false else State.sic[0] = false end end
         if feat("dutyWinReport") then Report.open[0] = false end
         if feat("dutyWinWithme") then Prompt.close() end
     end
@@ -2022,9 +2049,11 @@ function FVR.start()
     local seconds = math.max(5, math.min(60, tonumber(cfg.fvr.seconds) or 10))
     local startText = tostring(cfg.fvr.startText or "")
     if startText == "" then err(tr("fvr_notext")) return end
-    Queue.push("/f " .. startText)
+    -- departamentele anunta pe /r (radio) si /d; restul factiunilor pe /f si /sx
+    local dept = App and App.PD and App.PD.isDept()
+    Queue.push((dept and "/r " or "/f ") .. startText)
     local sx = tostring(cfg.fvr.sxText or "")
-    if sx ~= "" then Queue.push("/sx " .. sx) end
+    if sx ~= "" then Queue.push((dept and "/d " or "/sx ") .. sx) end
     FVR.active, FVR.at, FVR.seconds = true, os.clock(), seconds
     msg(tr("fvr_started", seconds))
 end
@@ -2041,7 +2070,7 @@ function FVR.update()
     FVR.active = false
     Queue.push("/fvr")
     local endText = tostring(cfg.fvr.endText or "")
-    if endText ~= "" then Queue.push("/sx " .. endText) end
+    if endText ~= "" then Queue.push(((App and App.PD and App.PD.isDept()) and "/d " or "/sx ") .. endText) end
 end
 
 -- ============================================================
@@ -2355,9 +2384,12 @@ Actions.list = {
     },
     {
         id = "sic", group = "hud",
-        label_ro = "Arata / ascunde /sic", label_en = "Toggle /sic",
-        hint = "/sic",
-        run = function() State.sic[0] = not State.sic[0] end,
+        label_ro = "Arata / ascunde statia (/sic sau /pdc)", label_en = "Toggle the station (/sic or /pdc)",
+        hint = "/sic  /pdc",
+        -- statia factiunii tale: /sic la School Instructors, /pdc la departamente
+        run = function()
+            if App.PD and App.PD.isDept() then App.PD.toggle() else State.sic[0] = not State.sic[0] end
+        end,
     },
     {
         id = "sih", group = "hud",
@@ -2400,6 +2432,16 @@ Actions.list = {
 
 Actions.byId = {}
 for _, a in ipairs(Actions.list) do Actions.byId[a.id] = a end
+
+-- actiunile doar de instructor: la departamente nu se mai arata in /sih (tastele deja puse merg in continuare)
+K.SI_ONLY = { acc = true, rl = true, sl = true, wm = true, sx = true, salut = true, pa = true, need = true, ok = true }
+-- actiunea se arata in /sih pentru factiunea aleasa?
+function Actions.visible(a)
+    local dept = App.PD ~= nil and App.PD.isDept()
+    if dept and K.SI_ONLY[a.id] then return false end
+    if a.show and not a.show() then return false end
+    return true
+end
 
 -- ============================================================
 -- BIND-URI PERSONALIZATE
@@ -2554,7 +2596,7 @@ function Keys.update()
         State.dockCursor = (on and id ~= nil and isKeyDown(id)
                             and not sampIsChatInputActive() and not sampIsDialogActive() and not isPauseMenuActive())
         -- in sens invers: cu o fereastra deschisa, aceeasi tasta ascunde cursorul cat o tii (camera / condus)
-        local windowOpen = State.sih[0] or Prompt.open[0] or State.sic[0] or Report.open[0]
+        local windowOpen = State.sih[0] or Prompt.open[0] or State.sic[0] or Report.open[0] or (App.PD ~= nil and App.PD.open[0])
         State.cursorHeldNoWindow   = State.dockCursor and not windowOpen
         State.cursorHeldWithWindow = State.dockCursor and windowOpen
     end
@@ -3020,6 +3062,7 @@ end
 -- grupurile din panoul de actiuni, in ordinea afisarii
 local ACTION_GROUPS = {
     { id = "instructor", title = "grp_instructor" },
+    { id = "pd",         title = "grp_pd" },
     { id = "hud",        title = "grp_hud" },
 }
 
@@ -3045,7 +3088,7 @@ local function drawActionsPanel(conflicts)
     for _, g in ipairs(ACTION_GROUPS) do
         local rows = {}
         for _, a in ipairs(Actions.list) do
-            if (a.group or "instructor") == g.id and actionMatches(a, needle) then table.insert(rows, a) end
+            if (a.group or "instructor") == g.id and actionMatches(a, needle) and Actions.visible(a) then table.insert(rows, a) end
         end
         if #rows > 0 then
             TC(DIM, u8(string.upper(tr(g.title))))
@@ -3441,7 +3484,7 @@ function Gen.keys()
     if imgui.BeginCombo("##addbind", "+  " .. u8(tr("add_bind"))) then
         for _, a in ipairs(Actions.list) do
             local keyName = Keys.nameOf(a.id)
-            if not keyName or keyName == "None" then
+            if (not keyName or keyName == "None") and Actions.visible(a) then
                 if imgui.Selectable(u8(actionLabel(a)) .. "##addb" .. a.id) then
                     cfg.binds[a.id .. "_on"] = 1
                     saveCfg()
@@ -3836,6 +3879,53 @@ end
 -- ============================================================
 App = { Ver = {}, Info = {}, Wizard = {} }
 
+-- schimbarea factiunii (combo, ghid, Interfata): tema, statia potrivita si un mesaj clar in chat.
+-- quiet = fara ferestre deschise / inchise (din ghidul de pornire)
+function App.setFaction(id, quiet)
+    local f = Factions.byId[id]
+    if not f then return end
+    local wasDept = App.PD ~= nil and App.PD.isDept()
+    cfg.main.factionId, cfg.main.theme = f.id, f.theme
+    saveCfg()
+    applyTheme()
+    if not App.PD then
+        if id == "pd" or id == "fbi" or id == "ng" then err(tr("pd_missing", tostring(App.PDError))) end
+        return
+    end
+    local dept = App.PD.isDept()
+    if dept and not wasDept then
+        if not quiet then State.sic[0], App.PD.open[0] = false, true end
+        msg(tr("iface_now_pd", App.PD.command()))
+    elseif wasDept and not dept then
+        if not quiet then App.PD.open[0] = false end
+        msg(tr("iface_now_si"))
+    end
+    trace("factiune: " .. tostring(id) .. (dept and " (departament)" or ""))
+end
+
+-- randul Interfata, sus in /sih -> General: un click schimba statia, comenzile, bind-urile, tutorialul si culorile
+function App.ifaceRow()
+    local dept = App.PD ~= nil and App.PD.isDept()
+    TC(DIM, u8(string.upper(tr("iface"))))
+    imgui.SameLine()
+    local w = (imgui.GetContentRegionAvail().x - imgui.GetStyle().ItemSpacing.x) / 2
+    local siLabel = (State.icons and (fa.GRADUATION_CAP .. "  ") or "") .. u8(tr("iface_si"))
+    if toggleButton(siLabel .. "##ifsi", cfg.main.factionId == "si", imgui.ImVec2(w, px(30))) and cfg.main.factionId ~= "si" then
+        App.setFaction("si")
+    end
+    if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
+    imgui.SameLine()
+    local pdLabel = (State.icons and (fa.SHIELD_HALVED .. "  ") or "") .. u8(tr("iface_pd"))
+    if toggleButton(pdLabel .. "##ifpd", dept, imgui.ImVec2(w, px(30))) and not dept then App.setFaction("pd") end
+    if imgui.IsItemHovered() then TIP(u8(tr("iface_tip"))) end
+    if App.PDError then
+        imgui.PushStyleColor(imgui.Col.Text, RED)
+        TW(u8(tr("pd_missing", App.PDError)))
+        imgui.PopStyleColor()
+    end
+    imgui.Spacing()
+end
+
 -- conditia de asezare a ferestrelor: normal "prima data", dar o jumatate de secunda dupa
 -- "Reseteaza aranjamentul" devine "intotdeauna", ca tot ce e pe ecran sa sara la locul implicit
 function App.cond()
@@ -3847,6 +3937,7 @@ end
 K.LAYOUT_KEYS = {
     "sicPosX", "sicPosY", "sicW", "sicH", "wmPosX", "wmPosY", "wmW", "wmH", "reportX", "reportY",
     "hudReportX", "hudReportY", "hudCheckX", "hudCheckY", "hudDockX", "hudDockY", "hudLegendX", "hudLegendY",
+    "pdcX", "pdcY", "pdcW", "pdcH",
 }
 
 function App.resetLayout()
@@ -4253,7 +4344,7 @@ function App.Info.notes(name)
         App.Info.noteWas = false
     end
     TC(t.accent, u8(string.upper(tr("info_notes"))))
-    local tags = Data.player_tags or {}
+    local tags = (App.PD and App.PD.isDept() and App.PD.tags()) or Data.player_tags or {}
     for i, tag in ipairs(tags) do
         if toggleButton(u8(tag) .. "##tag" .. i, App.Info.hasTag(p, tag), imgui.ImVec2(0, 22)) then
             App.Info.toggleTag(name, tag)
@@ -4360,6 +4451,8 @@ function App.Info.draw()
     App.Info.notes(name ~= "?" and name or nil)
 
     imgui.Separator()
+    -- la departamente: suspect / control / somatie in locul butoanelor de instructor
+    if App.PD and App.PD.isDept() then App.PD.infoButtons(id, name) return end
     local bw = (imgui.GetContentRegionAvail().x - imgui.GetStyle().ItemSpacing.x * 3) / 4
     if primaryButton(u8(tr("sic_withme")) .. "##iwm", imgui.ImVec2(bw, 24)) and id then Withme.ask(id) end
     if imgui.IsItemHovered() then TIP(u8(tr("tip_withme_btn"))) end
@@ -4482,6 +4575,7 @@ App.Wizard.fade = Fade.new()
 App.Wizard.step = 1
 K.WIZ_STEPS = 4
 K.WIZ_KEYS  = { "acc", "sic", "cursor" }   -- tastele propuse la pasul 3
+K.WIZ_KEYS_PD = { "sic", "pd_radar", "cursor" }   -- la departamente: statia, radarul, cursorul
 
 function App.Wizard.start(force)
     if not force and (tonumber(cfg.main.wizardDone) or 0) == 1 then return end
@@ -4545,9 +4639,7 @@ function App.Wizard.draw()
                 local r, g, b = hexToRgb(f.hex)
                 imgui.PushStyleColor(imgui.Col.Text, V4(math.max(r, 0.35), math.max(g, 0.35), math.max(b, 0.35)))
                 if imgui.Selectable(u8(f.label) .. "##wf" .. f.id, f.id == myFaction.id) then
-                    cfg.main.factionId, cfg.main.theme = f.id, f.theme
-                    saveCfg()
-                    applyTheme()
+                    App.setFaction(f.id, true)
                 end
                 imgui.PopStyleColor()
             end
@@ -4565,7 +4657,7 @@ function App.Wizard.draw()
         sectionHeader(tr("wiz_keys"))
         TC(DIM, u8(tr("wiz_keys_hint")))
         imgui.Spacing()
-        for _, aid in ipairs(K.WIZ_KEYS) do
+        for _, aid in ipairs((App.PD and App.PD.isDept()) and K.WIZ_KEYS_PD or K.WIZ_KEYS) do
             local a = Actions.byId[aid]
             if a then
                 TX(u8(actionLabel(a)))
@@ -4578,16 +4670,17 @@ function App.Wizard.draw()
         TC(DIM, u8(Keys.capturing and tr("press_key") or tr("wiz_keys_tip")))
 
     else
+        local dept = App.PD and App.PD.isDept()
         sectionHeader(tr("wiz_done"))
-        guideLine("1.", tr("wiz_done1"))
-        guideLine("2.", tr("wiz_done2"))
-        guideLine("3.", tr("wiz_done3"))
+        guideLine("1.", tr(dept and "wiz_pd1" or "wiz_done1"))
+        guideLine("2.", tr(dept and "wiz_pd2" or "wiz_done2"))
+        guideLine("3.", tr(dept and "wiz_pd3" or "wiz_done3"))
         imgui.Spacing()
         TC(DIM, u8(tr("wiz_done_hint")))
         imgui.Spacing()
-        if primaryButton(u8(tr("wiz_open_sic")) .. "##wizsic", imgui.ImVec2(px(170), 26)) then
+        if primaryButton(u8(tr(dept and "wiz_open_pdc" or "wiz_open_sic")) .. "##wizsic", imgui.ImVec2(px(170), 26)) then
             App.Wizard.finish()
-            State.sic[0] = true
+            if dept then App.PD.open[0] = true else State.sic[0] = true end
         end
     end
     imgui.EndChild()
@@ -4614,6 +4707,7 @@ local function drawGeneralTab()
     local currentTheme = Themes.byId[cfg.main.theme] or Themes.byId.si
 
     App.Ver.row()
+    App.ifaceRow()
 
     -- cautare peste toate setarile din toate tab-urile
     State.searchBuf = State.searchBuf or new.char[64]()
@@ -4656,10 +4750,7 @@ local function drawGeneralTab()
                 local r, g, b = hexToRgb(f.hex)
                 imgui.PushStyleColor(imgui.Col.Text, V4(math.max(r, 0.35), math.max(g, 0.35), math.max(b, 0.35)))
                 if imgui.Selectable(u8(f.label) .. "##fac" .. f.id, f.id == myFaction.id) then
-                    cfg.main.factionId = f.id
-                    cfg.main.theme = f.theme       -- tema urmeaza factiunea; se poate schimba separat mai jos
-                    saveCfg()
-                    applyTheme()
+                    App.setFaction(f.id)       -- tema si statia urmeaza factiunea; tema se poate schimba separat mai jos
                 end
                 imgui.PopStyleColor()
             end
@@ -4752,7 +4843,16 @@ local function drawGeneralTab()
     end
 
     -- COMENZI
-    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", 21)) then
+    local deptCmds = App.PD ~= nil and App.PD.isDept()
+    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", deptCmds and 20 or 21)) then
+      if deptCmds then
+        App.PD.drawGuide(guideLine)
+        guideLine("/sih",               tr("g_sih"))
+        guideLine("/notepad",           tr("g_notepad"))
+        guideLine("/info <id>",         tr("g_info"))
+        guideLine("/sicreset",          tr("g_sicreset"))
+        imgui.Dummy(imgui.ImVec2(0, px(4)))
+      else
         guideLine("/sic",               tr("g_sic"))
         guideLine("/sih",               tr("g_sih"))
         guideLine("/withme <id> <1-6>", tr("g_withme"))
@@ -4775,6 +4875,7 @@ local function drawGeneralTab()
         guideLine("/w1 /m1 /f1 /lsfl1",  tr("g_shorts4"))
         guideLine("/ffvr  /sfvr",       tr("f_fvrOn_tip"))
         imgui.Dummy(imgui.ImVec2(0, px(4)))
+      end
     end
 end
 
@@ -4820,6 +4921,15 @@ local function drawCommandsSection()
 end
 
 local function drawTutorialTab()
+    if App.PD and App.PD.isDept() then
+        if imgui.CollapsingHeader(u8(tr("sec_commands")) .. "##tutcmdpd", imgui.TreeNodeFlags.DefaultOpen) then
+            imgui.Spacing()
+            App.PD.drawGuide(guideLine)
+            imgui.Spacing()
+        end
+        App.PD.drawTutorial()
+        return
+    end
     if imgui.CollapsingHeader(u8(tr("sec_commands")) .. "##tutcmd", imgui.TreeNodeFlags.DefaultOpen) then
         imgui.Spacing()
         drawCommandsSection()
@@ -4864,6 +4974,7 @@ function Actions.closeAll()
     Prompt.close()
     State.sih[0], State.sic[0], Report.open[0], State.notes[0] = false, false, false, false
     App.Info.open[0] = false
+    if App.PD then App.PD.open[0] = false end
 end
 
 -- butonul "inchide tot" din capul ferestrelor: mic, discret, cu tooltip
@@ -4888,7 +4999,8 @@ imgui.OnFrame(function() return State.focused and (State.sih[0] or State.sihFade
     imgui.SetNextWindowSize(imgui.ImVec2(px(680), px(740)), App.cond())
 
     imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
-    imgui.Begin("SICHelper  v" .. VERSION .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
+    local facLabel = (Factions.byId[cfg.main.factionId] or Factions.byId.si).label
+    imgui.Begin("SICHelper  v" .. VERSION .. "  -  " .. u8(facLabel) .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
     State.textInput = imgui.GetIO().WantTextInput
 
     -- bara de tab-uri, cu hint-ul ESC aliniat la dreapta
@@ -5527,7 +5639,9 @@ end)
 -- Click cand cursorul e activ (orice fereastra deschisa) sau cat tii apasata tasta "Cursor" din Bind-uri.
 -- ============================================================
 K.DOCK_ITEMS = {
-    { id = "sic",    icon = "CLIPBOARD_LIST", isOpen = function() return State.sic[0] end },
+    -- statia factiunii: /sic (instructori) sau /pdc (departamente, cu scutul)
+    { id = "sic",    icon = "CLIPBOARD_LIST", iconDept = "SHIELD_HALVED",
+      isOpen = function() return State.sic[0] or (App.PD ~= nil and App.PD.open[0]) end },
     { id = "wm",     icon = "USER_PLUS",      isOpen = function() return Prompt.open[0] end },
     { id = "raport", icon = "CHART_SIMPLE",   isOpen = function() return Report.open[0] end },
     { id = "sih",    icon = "GEAR",           isOpen = function() return State.sih[0] end },
@@ -5615,7 +5729,8 @@ State.dockFrame = imgui.OnFrame(function() return State.focused and feat("dock")
         dl:AddRect(pMin, pMax, imgui.GetColorU32Vec4(borderCol), 6, 15, (open or stateCol) and 2 or 1.2)
 
         -- iconita in centru
-        local glyph = (item.icon and State.iconBig) and fa[item.icon] or nil
+        local iconName = (item.iconDept and App.PD and App.PD.isDept()) and item.iconDept or item.icon
+        local glyph = (iconName and State.iconBig) and fa[iconName] or nil
         if glyph then
             local sz = px(K.DOCK_ICON)
             local ts = State.iconBig:CalcTextSizeA(sz, math.huge, 0, glyph)
@@ -6208,6 +6323,37 @@ imgui.OnFrame(function() return State.focused and (State.sic[0] or State.sicFade
 end)
 
 -- ============================================================
+-- MODULUL PENTRU DEPARTAMENTE (PD / FBI / NG): moonloader/SICHelper/pd.lua + config/SICHelper_pd.lua
+-- Fisier separat: scriptul principal e aproape de limita de 200 de variabile locale a Lua.
+-- Primeste aici tot ce foloseste; daca lipseste sau are o eroare, restul helperului merge normal.
+-- ============================================================
+K.PD_FILE = getWorkingDirectory() .. "\\SICHelper\\pd.lua"
+do
+    local ok, res = pcall(dofile, K.PD_FILE)
+    if ok and type(res) == "function" then
+        ok, res = pcall(res, {
+            imgui = imgui, u8 = u8, new = new, ffi = ffi, bit = bit, fa = fa,
+            cfg = cfg, saveCfg = saveCfg, tr = tr, K = K, trace = trace,
+            Queue = Queue, msg = msg, err = err, usage = usage, nameTag = nameTag,
+            idOnline = idOnline, playerName = playerName, nearestPlayer = nearestPlayer, stepConnected = stepConnected,
+            playerLevel = playerLevel, rememberLevel = rememberLevel, Langs = Langs,
+            App = App, State = State, Fade = Fade, Factions = Factions, Notify = Notify, Duty = Duty, FVR = FVR,
+            takeScreenshot = takeScreenshot, closeAllButton = Actions.closeAllButton, guideLine = guideLine,
+            toggleButton = toggleButton, primaryButton = primaryButton, TC = TC, TW = TW, TIP = TIP, px = px,
+            theme = function() return Themes.byId[cfg.main.theme] or Themes.byId.si end,
+            colors = { DIM = DIM, TEXT = TEXT, RED = RED, AMBER = AMBER, OK = OK_GREEN, BLUE = BLUE },
+        })
+    end
+    if ok and type(res) == "table" then
+        App.PD = res
+        App.PD.addActions(Actions.list, Actions.byId, cfg.binds)
+    else
+        App.PDError = tostring(res)
+        trace("modulul PD nu s-a incarcat: " .. App.PDError)
+    end
+end
+
+-- ============================================================
 -- EVENIMENTE SERVER
 -- ============================================================
 -- un /needlicense sosit: mesaj in chat + notificare. Cat jocul e in bara (alt-tab / minimizat) NU se prelucreaza
@@ -6322,6 +6468,12 @@ end
 
 -- prelucrarea unei linii de la server (corpul propriu-zis); e masurata mai jos ca sa vedem daca produce inghetari
 local function onServerLine(color, text)
+    -- modulul PD: cei prinsi de radar, raspunsurile la /id, duty-ul la departamente
+    if App.PD then
+        local okPd, errPd = pcall(App.PD.onServerLine, text)
+        if not okPd then trace("pd: " .. tostring(errPd)) end
+    end
+
     -- serverul anunta: ... /accept needlicense <id> ...
     local service, id = text:match(SERVER.ACCEPT_SERVICE)
     if service and id and service:lower() == "needlicense" then
@@ -6492,6 +6644,7 @@ function Actions.escCloses()
     if State.sih[0] then State.sih[0] = false return true end
     if Report.open[0] then Report.open[0] = false return true end
     if State.sic[0] then State.sic[0] = false return true end
+    if App.PD and App.PD.open[0] then App.PD.open[0] = false return true end
     if App.Wizard.open[0] then App.Wizard.open[0] = false return true end
     if App.Info.open[0] then App.Info.open[0] = false return true end
     -- ESC in timpul unei editari din /notepad: renunta la editare, fereastra ramane
@@ -6596,6 +6749,7 @@ end
 
 -- comenzile trimise de tine: ne intereseaza doar /pin, ca sa stim cand ti-ai deblocat banii
 function sampev.onSendCommand(command)
+    if App.PD then pcall(App.PD.onSendCommand, command) end
     local c = tostring(command or ""):lower()
     if c:find("^/pin") and not State.pinOk then
         State.pinOk = true
@@ -6613,11 +6767,14 @@ end
 -- COMENZI
 -- ============================================================
 local function registerCommands()
-    sampRegisterChatCommand("sih", function()
-        State.sih[0] = not State.sih[0]
-    end)
+    -- /pdh: aceeasi fereastra de setari, cu numele obisnuit la departamente
+    for _, name in ipairs({ "sih", "pdh" }) do
+        sampRegisterChatCommand(name, function() State.sih[0] = not State.sih[0] end)
+    end
 
+    -- /sic: statia factiunii tale (la departamente, statia PD)
     sampRegisterChatCommand("sic", function()
+        if App.PD and App.PD.isDept() then App.PD.toggle() return end
         State.sic[0] = not State.sic[0]
     end)
 
@@ -6743,7 +6900,12 @@ local function registerCommands()
         sendAccept(id)
     end)
     sampRegisterChatCommand("rl", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/requestlicenses " .. id) end end)
-    sampRegisterChatCommand("sl", function(arg) local id = idOrCandidate(arg) if id then stopLesson(id) end end)
+    sampRegisterChatCommand("sl", function(arg)
+        -- la departamente /sl e sanctiunea pentru ultimul prins de radar (ca in PDHelper)
+        if App.PD and App.PD.isDept() then App.PD.SHORTS.sl(arg) return end
+        local id = idOrCandidate(arg)
+        if id then stopLesson(id) end
+    end)
     -- give / start lesson pe licenta: gw gm gs gf gfl / sw sm ss sf sfl
     local licShort = { w = K.LIC_WEAPONS, m = K.LIC_MATERIALS, s = K.LIC_SAILING, f = K.LIC_FISHING, fl = K.LIC_FLYING }
     for short, licId in pairs(licShort) do
@@ -6788,6 +6950,8 @@ local function registerCommands()
         sampRegisterChatCommand("cf", function() Queue.push("/cancel find") Queue.push("/killcp") end)
         sampRegisterChatCommand("gk", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/givekey " .. id) end end)
     end
+    -- statia PD (/pdc) si scurtaturile din PDHelper; la alte factiuni scurtaturile pleaca neschimbate la server
+    if App.PD then App.PD.register(sampRegisterChatCommand, { sl = true }) end
 end
 
 -- ============================================================
@@ -6804,9 +6968,19 @@ function main()
     saveCfg()
 
     trace("start v" .. VERSION)
-    msg("SICHelper " .. VERSION .. " incarcat. " .. COLOR.CMD .. "/sic" .. COLOR.TEXT .. " teste, "
-        .. COLOR.CMD .. "/sih" .. COLOR.TEXT .. " setari.")
+    -- o linie si in moonloader.log: se vede ce versiune ruleaza si daca s-a incarcat partea PD
+    print("SICHelper " .. VERSION .. (App.PD and (" + modul PD (" .. App.PD.command() .. ", /pdh)")
+          or (" - modul PD neincarcat: " .. tostring(App.PDError))))
+    if App.PD and App.PD.isDept() then
+        msg("SICHelper " .. VERSION .. " incarcat. " .. COLOR.CMD .. App.PD.command() .. COLOR.TEXT .. " statia PD, "
+            .. COLOR.CMD .. "/pdh" .. COLOR.TEXT .. " setari.")
+    else
+        msg("SICHelper " .. VERSION .. " incarcat. " .. COLOR.CMD .. "/sic" .. COLOR.TEXT .. " teste, "
+            .. COLOR.CMD .. "/sih" .. COLOR.TEXT .. " setari.")
+    end
     if dataError then err(tr("data_missing", dataError)) end
+    if App.PDError then err(tr("pd_missing", App.PDError)) end
+    if App.PD and App.PD.dataError then err(App.PD.t("data_error", App.PD.dataError)) end
     applyPagesize()
     Shots.init()
     Report.load()
@@ -6820,7 +6994,7 @@ function main()
         wait(0)
         -- fara ferestre deschise nu poate exista camp de text cu focus
         if not State.sih[0] and not Prompt.open[0] and not State.sic[0] and not State.notes[0]
-           and not App.Info.open[0] and not App.Wizard.open[0] then State.textInput = false end
+           and not App.Info.open[0] and not App.Wizard.open[0] and not (App.PD and App.PD.open[0]) then State.textInput = false end
         -- in pcall: la reincarcarea altor scripturi, apelul poate cadea cu "cannot resume non-suspended coroutine"
         if type(isGameWindowForeground) == "function" then
             local okFg, fg = pcall(isGameWindowForeground)
@@ -6865,6 +7039,13 @@ function main()
         Vehicle.update()
         Shots.update()
         FVR.update()
+        if App.PD then
+            local okPd, errPd = pcall(App.PD.update)
+            if not okPd and App.PDLastError ~= tostring(errPd) then
+                App.PDLastError = tostring(errPd)
+                trace("pd update: " .. App.PDLastError)
+            end
+        end
 
         -- pozitia ferestrei /sic se salveaza rar, nu la fiecare pixel
         if State.sicPosDirty and os.clock() - lastPosSave > 2 then
