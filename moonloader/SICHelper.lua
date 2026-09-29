@@ -6968,6 +6968,9 @@ function main()
     saveCfg()
 
     trace("start v" .. VERSION)
+    -- o linie si in moonloader.log: se vede ce versiune ruleaza si daca s-a incarcat partea PD
+    print("SICHelper " .. VERSION .. (App.PD and (" + modul PD (" .. App.PD.command() .. ", /pdh)")
+          or (" - modul PD neincarcat: " .. tostring(App.PDError))))
     if App.PD and App.PD.isDept() then
         msg("SICHelper " .. VERSION .. " incarcat. " .. COLOR.CMD .. App.PD.command() .. COLOR.TEXT .. " statia PD, "
             .. COLOR.CMD .. "/pdh" .. COLOR.TEXT .. " setari.")
