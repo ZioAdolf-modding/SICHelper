@@ -2,6 +2,23 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
+## [Nepublicat]
+
+### Reparat
+- **Anularea FVR nu ajungea la factiune.** `/sfvr` oprea numaratoarea, dar numai tu vedeai asta:
+  ceilalti ramaneau cu anuntul „FVR in 10 secunde" si asteptau un respawn care nu mai venea.
+  Acum anularea pleaca pe aceleasi canale ca anuntul (`/f` si `/sx`), cu un text propriu, editabil
+  in `/sih` -> Features -> FVR.
+- **Nu mai exista fereastra in care anularea nu functiona.** Dupa ce numaratoarea se termina, `/fvr`
+  mai asteapta la coada cateva zecimi de secunda; in intervalul ala `/sfvr` raspundea „nu e niciun
+  FVR in curs", desi comanda tocmai pleca. Acum o scoate din coada si anunta anularea, iar daca a
+  plecat deja iti spune pe sleau asta, nu ca nu se intampla nimic.
+- **Numaratoarea porneste cand pleaca anuntul**, nu cand apesi tasta. Mesajele trec prin coada, asa
+  ca factiunea primea anuntul la o secunda-doua dupa ce ceasul pornise deja.
+- `/fvr` trece acum in fata cozii, ca respawn-ul sa se intample cand a fost anuntat.
+- Daca pici de pe server in timpul numaratorii, FVR-ul se anuleaza singur.
+
+
 ## [1.7.0-beta] — 2026-10-01
 
 ### Adaugat

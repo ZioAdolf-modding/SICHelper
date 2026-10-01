@@ -77,6 +77,7 @@ K.NOTES_FOLD_W = 146         -- latimea coloanei cu foldere din /notepad, px
 K.ALLY_DELAY   = 2200        -- ms de asteptat inainte de /pay (serverul cere pauza intre comenzi)
 K.ALLY_MAX_AGE = 180         -- secunde cat mai asteapta o plata neexpediata (fara /pin)
 K.ALLY_WARN    = 20          -- secunde intre doua atentionari "da /pin"
+K.FVR_LATE     = 30          -- secunde cat mai spunem "prea tarziu" dupa ce /fvr a plecat
 
 -- valori cu semnificatie fixa: in cod se folosesc DOAR aceste nume, nu cifre / stringuri goale
 K.LANG_RO, K.LANG_EN                                 = "ro", "en"
@@ -310,6 +311,7 @@ local defaultConfig = {
         startText = "FVR in 10 seconds !!",
         sxText    = "FVR in 10 seconds",
         endText   = "FVR Executed successfully !",
+        stopText  = "FVR cancelled - no respawn.",
         seconds   = 10,
     },
     binds = {
@@ -511,7 +513,8 @@ local L = {
         f_fvrOn = "FVR",
         f_fvrOn_tip = "/ffvr anunta pe /f si /sx, numara secundele si da /fvr. /sfvr opreste.",
         fvr_start_text = "Text pe /f", fvr_sx_text = "Text pe /sx", fvr_end_text = "Text dupa /fvr", fvr_seconds = "Secunde",
-        fvr_started = "FVR in %d secunde. /sfvr opreste.", fvr_stopped = "FVR oprit.",
+        fvr_stop_text = "Text la anulare", fvr_late = "Prea tarziu: /fvr a plecat deja la server.",
+        fvr_started = "FVR in %d secunde. /sfvr opreste.", fvr_stopped = "FVR anulat.",
         fvr_busy = "Exista deja un FVR in curs.", fvr_none = "Nu e niciun FVR in curs.",
         fvr_notext = "Textul pentru /f lipseste (vezi /sih -> Features -> FVR).", fvr_off = "FVR e oprit din /sih -> Features.",
         hp_fail = "HP-ul vehiculului lui %s a scazut sub 950 (%d)!", hp_fail_short = "HP vehicul sub 950 (%d)",
@@ -754,6 +757,7 @@ local L = {
         f_fvrOn = "FVR",
         f_fvrOn_tip = "/ffvr announces on /f and /sx, counts down and sends /fvr. /sfvr cancels.",
         fvr_start_text = "/f text", fvr_sx_text = "/sx text", fvr_end_text = "Text after /fvr", fvr_seconds = "Seconds",
+        fvr_stop_text = "Cancel text", fvr_late = "Too late: /fvr has already gone out.",
         fvr_started = "FVR in %d seconds. /sfvr cancels.", fvr_stopped = "FVR cancelled.",
         fvr_busy = "There is already an FVR in progress.", fvr_none = "No FVR in progress.",
         fvr_notext = "The /f text is missing (see /sih -> Features -> FVR).", fvr_off = "FVR is disabled in /sih -> Features.",
@@ -912,14 +916,23 @@ local Queue = {
 }
 
 -- delayAfter (optional, ms) = pauza pana la urmatorul mesaj; implicit cea din setari
-function Queue.push(text, delayAfter)
-    table.insert(Queue.items, { text = text, after = delayAfter })
+-- onSent (optional) = se apeleaza imediat dupa ce mesajul a plecat efectiv la server
+function Queue.push(text, delayAfter, onSent)
+    table.insert(Queue.items, { text = text, after = delayAfter, onSent = onSent })
 end
 
 -- in fata cozii si fara asteptare: pleaca la urmatorul frame al scriptului (sub 20 ms)
-function Queue.pushFront(text, delayAfter)
-    table.insert(Queue.items, 1, { text = text, after = delayAfter })
+function Queue.pushFront(text, delayAfter, onSent)
+    table.insert(Queue.items, 1, { text = text, after = delayAfter, onSent = onSent })
     Queue.nextAt = 0
+end
+
+-- scoate din coada primul mesaj identic, daca inca n-a plecat; true = l-a gasit si l-a scos
+function Queue.remove(text)
+    for i, item in ipairs(Queue.items) do
+        if item.text == text then table.remove(Queue.items, i) return true end
+    end
+    return false
 end
 
 function Queue.clear()
@@ -935,6 +948,7 @@ function Queue.update()
     sampSendChat(item.text)
     Queue.lastSent = item.text
     Queue.nextAt = now + (item.after or tonumber(cfg.main.queueDelay) or 700)
+    if item.onSent then pcall(item.onSent) end
 end
 
 -- ============================================================
@@ -2018,30 +2032,61 @@ local FVR = {
 
 function FVR.start()
     if not feat("fvrOn") then err(tr("fvr_off")) return end
-    if FVR.active then err(tr("fvr_busy")) return end
+    if FVR.active or FVR.pending then err(tr("fvr_busy")) return end
     local seconds = math.max(5, math.min(60, tonumber(cfg.fvr.seconds) or 10))
     local startText = tostring(cfg.fvr.startText or "")
     if startText == "" then err(tr("fvr_notext")) return end
-    Queue.push("/f " .. startText)
     local sx = tostring(cfg.fvr.sxText or "")
-    if sx ~= "" then Queue.push("/sx " .. sx) end
-    FVR.active, FVR.at, FVR.seconds = true, os.clock(), seconds
+    FVR.active, FVR.seconds, FVR.at, FVR.doneAt = true, seconds, nil, nil
+    -- numaratoarea porneste cand pleaca ULTIMUL anunt, nu cand apesi tasta: mesajele stau la coada,
+    -- iar factiunea ar primi anuntul la o secunda-doua dupa ce ceasul nostru a pornit deja
+    local function announced() if FVR.active then FVR.at = os.clock() end end
+    if sx ~= "" then
+        Queue.push("/f " .. startText)
+        Queue.push("/sx " .. sx, nil, announced)
+    else
+        Queue.push("/f " .. startText, nil, announced)
+    end
     msg(tr("fvr_started", seconds))
 end
 
-function FVR.stop()
-    if not FVR.active then err(tr("fvr_none")) return end
-    FVR.active = false
+-- anuntul de anulare pleaca pe aceleasi canale ca cel de pornire si trece in fata cozii:
+-- factiunea trebuie sa afle ca nu mai urmeaza niciun respawn, altfel asteapta degeaba
+function FVR.announceStop()
     msg(tr("fvr_stopped"))
+    local stopText = tostring(cfg.fvr.stopText or "")
+    if stopText == "" then return end
+    if tostring(cfg.fvr.sxText or "") ~= "" then Queue.pushFront("/sx " .. stopText) end
+    Queue.pushFront("/f " .. stopText)
+end
+
+function FVR.stop()
+    -- numaratoarea e in curs: o oprim
+    if FVR.active then
+        FVR.active, FVR.at = false, nil
+        FVR.announceStop()
+        return
+    end
+    -- numaratoarea s-a terminat, dar /fvr inca asteapta la coada: il scoatem de acolo
+    if FVR.pending then
+        FVR.pending = false
+        if Queue.remove("/fvr") then FVR.announceStop() return end
+    end
+    -- a plecat deja la server: spunem asta pe sleau, nu "nu e niciun FVR in curs"
+    if FVR.doneAt and os.clock() - FVR.doneAt < K.FVR_LATE then err(tr("fvr_late")) return end
+    err(tr("fvr_none"))
 end
 
 function FVR.update()
-    if not FVR.active then return end
+    if not FVR.active or not FVR.at then return end
     if os.clock() - FVR.at < FVR.seconds then return end
-    FVR.active = false
-    Queue.push("/fvr")
-    local endText = tostring(cfg.fvr.endText or "")
-    if endText ~= "" then Queue.push("/sx " .. endText) end
+    FVR.active, FVR.pending = false, true
+    -- /fvr trece in fata cozii: respawn-ul se intampla cand a fost anuntat, nu dupa alte mesaje
+    Queue.pushFront("/fvr", nil, function()
+        FVR.pending, FVR.doneAt = false, os.clock()
+        local endText = tostring(cfg.fvr.endText or "")
+        if endText ~= "" then Queue.push("/sx " .. endText) end
+    end)
 end
 
 -- ============================================================
@@ -3208,11 +3253,12 @@ local NOTIFY_OPTIONS = {
 
 local function fvrBuffers()
     if not State.fvrBuf then
-        State.fvrBuf = { start = new.char[128](), sx = new.char[128](), stop = new.char[128](),
+        State.fvrBuf = { start = new.char[128](), sx = new.char[128](), stop = new.char[128](), cancel = new.char[128](),
                    seconds = new.int(tonumber(cfg.fvr.seconds) or 10) }
         imgui.StrCopy(State.fvrBuf.start, tostring(cfg.fvr.startText or ""))
         imgui.StrCopy(State.fvrBuf.sx,    tostring(cfg.fvr.sxText or ""))
-        imgui.StrCopy(State.fvrBuf.stop,  tostring(cfg.fvr.endText or ""))
+        imgui.StrCopy(State.fvrBuf.stop,   tostring(cfg.fvr.endText or ""))
+        imgui.StrCopy(State.fvrBuf.cancel, tostring(cfg.fvr.stopText or ""))
     end
     return State.fvrBuf
 end
@@ -3322,7 +3368,8 @@ local function drawFvrSettings()
     end
     textRow("fvr_start_text", b.start, "startText")
     textRow("fvr_sx_text",    b.sx,    "sxText")
-    textRow("fvr_end_text",   b.stop,  "endText")
+    textRow("fvr_end_text",   b.stop,   "endText")
+    textRow("fvr_stop_text",  b.cancel, "stopText")
     imgui.SetCursorPosX(52)
     TC(DIM, u8(tr("fvr_seconds")))
     imgui.SameLine(180)
@@ -6422,6 +6469,7 @@ local function onServerLine(color, text)
     -- deconectare: banii se blocheaza din nou pana la urmatorul /pin
     if text:find("Server closed the connection", 1, true) or text:find("Lost connection", 1, true) then
         State.pinOk = false
+        if FVR.active or FVR.pending then FVR.active, FVR.pending = false, false end
     end
 
     -- raspunsul la /id cerut de fereastra /info: il folosim noi si nu se mai afiseaza in chat
