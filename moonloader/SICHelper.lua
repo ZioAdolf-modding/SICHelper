@@ -382,7 +382,6 @@ local L = {
         ally_pin_short = "Da /pin: o plata catre aliat asteapta",
         ally_none_due = "Nicio plata in asteptare catre factiunea aliata.",
         g_sicpay = "trimite acum platile catre aliati care asteptau /pin",
-        only_faction = "Comanda e doar pentru %s. Schimba factiunea din /sih -> General.",
         reset_layout = "Reseteaza aranjamentul", reset_done = "Ferestrele si HUD-urile au revenit la locul lor.",
         reset_layout_tip = "Readuce toate ferestrele si panourile de pe ecran la pozitia si marimea implicita (/sicreset).",
         ver_new = "Versiune noua disponibila: %s", ver_src = "- ia-o din Releases, de pe sursa oficiala",
@@ -626,7 +625,6 @@ local L = {
         ally_pin_short = "Type /pin: a payment to your ally is waiting",
         ally_none_due = "No payment waiting for the allied faction.",
         g_sicpay = "sends the ally payments that were waiting for /pin",
-        only_faction = "This command is only for %s. Change your faction in /sih -> General.",
         reset_layout = "Reset the layout", reset_done = "Windows and HUDs are back in place.",
         reset_layout_tip = "Puts every window and on-screen panel back to its default position and size (/sicreset).",
         ver_new = "New version available: %s", ver_src = "- get it from Releases, on the official source",
@@ -2338,9 +2336,9 @@ Actions.list = {
         run = function() Queue.push("/duty") end,
     },
     {
-        id = "rr",
+        id = "rr", faction = "si",
         label_ro = "Repair / Refill", label_en = "Repair / Refill",
-        hint = "/repair + /refill",
+        hint = "/rr",
         run = function() RR.start() end,
     },
     {
@@ -2402,6 +2400,35 @@ Actions.list = {
 
 Actions.byId = {}
 for _, a in ipairs(Actions.list) do Actions.byId[a.id] = a end
+
+-- Unele actiuni au sens doar intr-o anumita factiune (ex. Repair / Refill, la School Instructors).
+-- Cand alegi alta factiune din /sih, ele dispar din bind-uri, din legenda si din cautare, tasta lor
+-- nu mai face nimic, iar comanda de chat se scoate din joc (vezi Actions.syncCommands).
+function Actions.ok(a)
+    return (not a.faction) or tostring(cfg.main.factionId) == tostring(a.faction)
+end
+
+-- actiunile potrivite factiunii alese acum
+function Actions.shown()
+    local out = {}
+    for _, a in ipairs(Actions.list) do
+        if Actions.ok(a) then table.insert(out, a) end
+    end
+    return out
+end
+
+-- comenzile de chat legate de o factiune: se inregistreaza si se scot pe loc, la schimbarea factiunii
+function Actions.syncCommands()
+    local want = Actions.ok(Actions.byId.rr)
+    if want == Actions.rrOn then return end
+    Actions.rrOn = want
+    if want then
+        sampRegisterChatCommand("rr", function() RR.start() end)
+    else
+        pcall(sampUnregisterChatCommand, "rr")
+    end
+    trace("comanda /rr " .. (want and "disponibila" or "scoasa") .. " (factiune: " .. tostring(cfg.main.factionId) .. ")")
+end
 
 -- ============================================================
 -- BIND-URI PERSONALIZATE
@@ -2487,7 +2514,7 @@ end
 -- toate tastele folosite, pentru detectarea conflictelor
 function Keys.usage()
     local used = {}
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local k = Keys.nameOf(a.id)
         if k and k ~= "None" then used[k] = (used[k] or 0) + 1 end
     end
@@ -2569,7 +2596,7 @@ function Keys.update()
         return
     end
 
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local keyName = Keys.nameOf(a.id)
         local on = tonumber(cfg.binds[a.id .. "_on"]) or 0
         if on == 1 and keyName and keyName ~= "None" then
@@ -2640,10 +2667,6 @@ local FACTIONS = {
 local Factions = { list = FACTIONS, byId = {} }
 for _, f in ipairs(FACTIONS) do Factions.byId[f.id] = f end
 
--- e factiunea mea cea ceruta? (unele comenzi au sens doar intr-o anumita factiune)
-function Factions.isMine(id)
-    return tostring(cfg.main.factionId) == tostring(id)
-end
 
 -- numele rangului dupa numarul din /id: "(6)" la School Instructors -> "Under Boss".
 -- Factiunile fara nume proprii de ranguri intorc "Rang 6"; rangul 0 e cel de dinainte de test.
@@ -3051,7 +3074,7 @@ local function drawActionsPanel(conflicts)
     local shown = 0
     for _, g in ipairs(ACTION_GROUPS) do
         local rows = {}
-        for _, a in ipairs(Actions.list) do
+        for _, a in ipairs(Actions.shown()) do
             if (a.group or "instructor") == g.id and actionMatches(a, needle) then table.insert(rows, a) end
         end
         if #rows > 0 then
@@ -3408,7 +3431,7 @@ end
 -- sectiunea "Tastele mele": bind-urile cu tasta setata + "Adauga un bind"
 function Gen.keys()
     local shown = 0
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local keyName = Keys.nameOf(a.id)
         if keyName and keyName ~= "None" then
             shown = shown + 1
@@ -3446,7 +3469,7 @@ function Gen.keys()
     -- fereastra popup-ului, iar un Pop de acolo crapa jocul
     imgui.PushItemWidth(220)
     if imgui.BeginCombo("##addbind", "+  " .. u8(tr("add_bind"))) then
-        for _, a in ipairs(Actions.list) do
+        for _, a in ipairs(Actions.shown()) do
             local keyName = Keys.nameOf(a.id)
             if not keyName or keyName == "None" then
                 if imgui.Selectable(u8(actionLabel(a)) .. "##addb" .. a.id) then
@@ -3486,7 +3509,7 @@ function Gen.index()
             add(tr("tab_features"), tr(group.title), tr("f_" .. k), "feat", k)
         end
     end
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         add(tr("tab_binds"), tr("grp_" .. (a.group or "instructor")), actionLabel(a), "bind", a.id)
     end
     return list
@@ -4686,7 +4709,7 @@ local function drawGeneralTab()
 
     -- TASTELE MELE
     local nBinds = 0
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local k = Keys.nameOf(a.id)
         if k and k ~= "None" then nBinds = nBinds + 1 end
     end
@@ -5683,7 +5706,7 @@ State.legendFrame = imgui.OnFrame(function()
     if State.checkpoint then return true end   -- randul cu checkpoint-ul
     local cid = Candidate.get()
     if cid then local okc, pedc = sampGetCharHandleBySampPlayerId(cid) if okc then return true end end   -- candidat langa noi
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local key = Keys.nameOf(a.id)
         if key and key ~= "None" and (tonumber(cfg.binds[a.id .. "_on"]) or 0) == 1
            and (tonumber(cfg.binds[a.id .. "_hide"]) or 0) == 0 then return true end
@@ -5704,7 +5727,7 @@ end, function(player)
 
     -- randurile
     local rows = {}
-    for _, a in ipairs(Actions.list) do
+    for _, a in ipairs(Actions.shown()) do
         local key = Keys.nameOf(a.id)
         if key and key ~= "None" and (tonumber(cfg.binds[a.id .. "_on"]) or 0) == 1
            and (tonumber(cfg.binds[a.id .. "_hide"]) or 0) == 0 then
@@ -6792,11 +6815,7 @@ local function registerCommands()
     -- /ccc: curata chatul (30 de linii goale), ca la AdeM
     sampRegisterChatCommand("ccc", function() for _ = 1, 30 do chat("") end end)
     -- scurtaturi cerute de instructori, mereu disponibile (nu depind de "Comenzi scurte generale").
-    -- /rr e legata de munca de instructor, deci merge doar daca factiunea ta e School Instructors.
-    sampRegisterChatCommand("rr", function()
-        if not Factions.isMine("si") then err(tr("only_faction", Factions.byId.si.label)) return end
-        RR.start()
-    end)
+    -- /rr se inregistreaza si se scoate dupa factiunea aleasa (Actions.syncCommands)
     sampRegisterChatCommand("gk", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/givekey " .. id) end end)
     sampRegisterChatCommand("m",  function() Queue.push("/members") end)
     for _, name in ipairs({ "cm", "CM" }) do
@@ -6828,6 +6847,7 @@ function main()
     end
 
     registerCommands()
+    Actions.syncCommands()
     saveCfg()
 
     trace("start v" .. VERSION)
@@ -6884,6 +6904,7 @@ function main()
         RR.update()
         Notify.update()
         App.Ver.update()
+        Actions.syncCommands()   -- /rr apare sau dispare cand schimbi factiunea in /sih
         -- fontul de iconite din modpack e mai vechi decat cel din arhiva: o singura atentionare
         if State.fontOld and not State.fontWarned then
             State.fontWarned = true
