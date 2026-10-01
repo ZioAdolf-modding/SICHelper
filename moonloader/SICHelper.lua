@@ -1,5 +1,5 @@
 -- ============================================================
--- SICHelper - CMD helper pentru School Instructors (B-Zone RPG / SA:MP)
+-- SICHelper - CMDHelper, editia School Instructors (B-Zone RPG / SA:MP)
 -- Copyright (C) 2026 ZioAdolf (Discord: vlandrewz)
 --
 -- Sursa oficiala: https://github.com/ZioAdolf-modding/SICHelper
@@ -17,7 +17,7 @@
 script_name("SICHelper")
 local VERSION = "1.7.0-beta"
 script_version(VERSION)
-script_description("School Instructors CMD Helper - /sic, /sih, /withme, /sxwas, bind-uri")
+script_description("CMDHelper, editia School Instructors - /sic, /sih, /withme, /sxwas, bind-uri")
 
 -- ============================================================
 -- REQUIRES
@@ -454,7 +454,7 @@ local L = {
         not_on_duty = "Nu esti la datorie! Foloseste " .. COLOR.CMD .. "/duty" .. COLOR.ERR .. " ca sa te pui on duty.",
         pagesize = "Randuri in chat", pagesize_hint = "trimite /pagesize (10-30); se aplica si la pornire",
         apply = "Aplica", screenshot = "Screenshot (F8)", duty = "duty",
-        wm_author = "SICHelper by ZioAdolf  -  Discord: vlandrewz",
+        wm_author = "CMDHelper by ZioAdolf  -  Discord: vlandrewz",
         wm_bugs = "Bug sau idee? Discord: vlandrewz  -  Comenzi si texte de test: SIHelper by AdeM",
         wm_src = "GPL-3.0  -  sursa oficiala: github.com/ZioAdolf-modding/SICHelper",
         sec_auto = "Automatizari", sec_notify = "Notificari", sec_window = "Ferestre", sec_cmds = "Comenzi",
@@ -698,7 +698,7 @@ local L = {
         not_on_duty = "You are not on duty! Use " .. COLOR.CMD .. "/duty" .. COLOR.ERR .. " to go on duty.",
         pagesize = "Chat lines", pagesize_hint = "sends /pagesize (10-30); also applied at startup",
         apply = "Apply", screenshot = "Screenshot (F8)", duty = "duty",
-        wm_author = "SICHelper by ZioAdolf  -  Discord: vlandrewz",
+        wm_author = "CMDHelper by ZioAdolf  -  Discord: vlandrewz",
         wm_bugs = "Bug or idea? Discord: vlandrewz  -  Commands and test texts: SIHelper by AdeM",
         wm_src = "GPL-3.0  -  official source: github.com/ZioAdolf-modding/SICHelper",
         sec_auto = "Automation", sec_notify = "Notifications", sec_window = "Windows", sec_cmds = "Commands",
@@ -4974,7 +4974,7 @@ imgui.OnFrame(function() return State.focused and (State.sih[0] or State.sihFade
     imgui.SetNextWindowSize(imgui.ImVec2(px(680), px(740)), App.cond())
 
     imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, alpha)
-    imgui.Begin("SICHelper  v" .. VERSION .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
+    imgui.Begin("CMDHelper - School Instructors  v" .. VERSION .. "##sih", State.sih, imgui.WindowFlags.NoCollapse)
     State.textInput = imgui.GetIO().WantTextInput
 
     -- bara de tab-uri, cu hint-ul ESC aliniat la dreapta
