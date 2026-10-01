@@ -1,7 +1,11 @@
 # SICHelper
 
 CMD helper for **School Instructors** on B-Zone RPG (SA:MP). Written in Lua, for MoonLoader.
-For now it covers only this faction; the others will be added gradually.
+
+**SIC stands for School Instructors, and this is their edition.** For now the helper covers only
+that faction; the others will be added gradually. Once it genuinely covers more than School
+Instructors, the name changes together with a major version - until then it stays the one you
+installed it under.
 
 **Version:** 1.7.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
 
