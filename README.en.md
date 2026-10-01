@@ -3,7 +3,7 @@
 CMD helper for **School Instructors** on B-Zone RPG (SA:MP). Written in Lua, for MoonLoader.
 For now it covers only this faction; the others will be added gradually.
 
-**Version:** 1.6.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
+**Version:** 1.7.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
 
 > **Official source: <https://github.com/ZioAdolf-modding/SICHelper>**
 > Any other copy, archive or build from another site, Discord or channel is not official and is not

@@ -2,7 +2,7 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
-## [Nepublicat]
+## [1.7.0-beta] — 2026-10-01
 
 ### Adaugat
 - **Factiune aliata**: cand dai o licenta unui membru al factiunii aliate, helperul ii trimite
