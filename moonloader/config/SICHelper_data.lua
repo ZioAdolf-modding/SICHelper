@@ -284,6 +284,32 @@ data.player_tags = { "posthunter", "baiat de treaba", "cere des", "atent", "de e
 -- Schimba pragurile daca factiunea ta socoteste altfel.
 -- ------------------------------------------------------------
 data.report_levels = { min = 2, max = 49 }
+
+-- ------------------------------------------------------------
+-- LISTA DE COMENZI ARATATA IN /sih -> General -> Comenzi, pe factiuni.
+-- Cheia e id-ul factiunii; "default" e lista aratata oricarei factiuni care nu are una proprie.
+-- School Instructors are lista lor scrisa in cod (e tradusa RO/EN), deci nu apare aici.
+-- Cand o factiune primeste comenzile ei in helper, se adauga aici.
+-- ------------------------------------------------------------
+data.commands = {
+    default = {
+        { "/sih",       "setari: limba, factiune, feature-uri, bind-uri" },
+        { "/info <id>", "buletinul jucatorului: nivel, factiune, rang, notitele tale" },
+        { "/notepad",   "notitele tale: le trimiti in chat sau le copiezi" },
+        { "/sicreset",  "readuce ferestrele si HUD-urile la pozitia implicita" },
+        { "/sicwizard", "redeschide ghidul de pornire" },
+        { "/m  /cm  /gk", "scurtaturi: /members, /clanmembers, /givekey <id>" },
+        { "-",          "comenzile acestei factiuni nu sunt inca in helper; se adauga pe rand" },
+    },
+    pd = {
+        { "/sih",       "setari: limba, factiune, feature-uri, bind-uri" },
+        { "/info <id>", "buletinul jucatorului: nivel, factiune, rang, notitele tale" },
+        { "/notepad",   "notitele tale: le trimiti in chat sau le copiezi" },
+        { "/sicreset",  "readuce ferestrele si HUD-urile la pozitia implicita" },
+        { "/m  /cm  /gk", "scurtaturi: /members, /clanmembers, /givekey <id>" },
+        { "-",          "statia de control PD (somatie, cuff, frisk, ticket, radar) e in lucru" },
+    },
+}
 -- FACTIUNEA ALIATA: cui dai banii inapoi pe licente.
 -- Cheia de sus e factiunea ta, iar inauntru orasul (la factiunile care au orase).
 -- Gol = nu ai aliat. Aliatul se poate alege si din /sih -> Features, fara sa umbli aici.

@@ -382,6 +382,7 @@ local L = {
         ally_pin_short = "Da /pin: o plata catre aliat asteapta",
         ally_none_due = "Nicio plata in asteptare catre factiunea aliata.",
         g_sicpay = "trimite acum platile catre aliati care asteptau /pin",
+        only_faction = "Comanda e doar pentru %s. Schimba factiunea din /sih -> General.",
         reset_layout = "Reseteaza aranjamentul", reset_done = "Ferestrele si HUD-urile au revenit la locul lor.",
         reset_layout_tip = "Readuce toate ferestrele si panourile de pe ecran la pozitia si marimea implicita (/sicreset).",
         ver_new = "Versiune noua disponibila: %s", ver_src = "- ia-o din Releases, de pe sursa oficiala",
@@ -625,6 +626,7 @@ local L = {
         ally_pin_short = "Type /pin: a payment to your ally is waiting",
         ally_none_due = "No payment waiting for the allied faction.",
         g_sicpay = "sends the ally payments that were waiting for /pin",
+        only_faction = "This command is only for %s. Change your faction in /sih -> General.",
         reset_layout = "Reset the layout", reset_done = "Windows and HUDs are back in place.",
         reset_layout_tip = "Puts every window and on-screen panel back to its default position and size (/sicreset).",
         ver_new = "New version available: %s", ver_src = "- get it from Releases, on the official source",
@@ -2637,6 +2639,11 @@ local FACTIONS = {
 }
 local Factions = { list = FACTIONS, byId = {} }
 for _, f in ipairs(FACTIONS) do Factions.byId[f.id] = f end
+
+-- e factiunea mea cea ceruta? (unele comenzi au sens doar intr-o anumita factiune)
+function Factions.isMine(id)
+    return tostring(cfg.main.factionId) == tostring(id)
+end
 
 -- numele rangului dupa numarul din /id: "(6)" la School Instructors -> "Under Boss".
 -- Factiunile fara nume proprii de ranguri intorc "Rang 6"; rangul 0 e cel de dinainte de test.
@@ -4751,8 +4758,16 @@ local function drawGeneralTab()
         imgui.Dummy(imgui.ImVec2(0, px(4)))
     end
 
-    -- COMENZI
-    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", 21)) then
+    -- COMENZI: lista factiunii alese vine din fisierul de date; School Instructors au lista
+    -- scrisa in cod, pentru ca e tradusa RO / EN
+    local facCmds = Data and Data.commands and Data.commands[tostring(cfg.main.factionId)]
+    if not facCmds and tostring(cfg.main.factionId) ~= "si" then
+        facCmds = Data and Data.commands and Data.commands.default
+    end
+    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", facCmds and #facCmds or 21)) then
+        if facCmds then
+            for _, c in ipairs(facCmds) do guideLine(tostring(c[1]), tostring(c[2])) end
+        else
         guideLine("/sic",               tr("g_sic"))
         guideLine("/sih",               tr("g_sih"))
         guideLine("/withme <id> <1-6>", tr("g_withme"))
@@ -4774,6 +4789,7 @@ local function drawGeneralTab()
         guideLine("/sw /sm /ss /sf /sfl", tr("g_shorts3"))
         guideLine("/w1 /m1 /f1 /lsfl1",  tr("g_shorts4"))
         guideLine("/ffvr  /sfvr",       tr("f_fvrOn_tip"))
+        end
         imgui.Dummy(imgui.ImVec2(0, px(4)))
     end
 end
@@ -6775,10 +6791,22 @@ local function registerCommands()
     end
     -- /ccc: curata chatul (30 de linii goale), ca la AdeM
     sampRegisterChatCommand("ccc", function() for _ = 1, 30 do chat("") end end)
+    -- scurtaturi cerute de instructori, mereu disponibile (nu depind de "Comenzi scurte generale").
+    -- /rr e legata de munca de instructor, deci merge doar daca factiunea ta e School Instructors.
+    sampRegisterChatCommand("rr", function()
+        if not Factions.isMine("si") then err(tr("only_faction", Factions.byId.si.label)) return end
+        RR.start()
+    end)
+    sampRegisterChatCommand("gk", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/givekey " .. id) end end)
+    sampRegisterChatCommand("m",  function() Queue.push("/members") end)
+    for _, name in ipairs({ "cm", "CM" }) do
+        sampRegisterChatCommand(name, function() Queue.push("/clanmembers") end)
+    end
+
     -- scurtaturile generale ale lui AdeM (optionale, Features -> "Comenzi scurte generale"); se aplica la Ctrl+R
     if feat("shortsOn") then
         local shorts = {
-            m = "/members", cm = "/clanmembers", missm = "/missed messages", missc = "/missed calls",
+            missm = "/missed messages", missc = "/missed calls",
             sv = "/servicecalls", sj = "/switchjob", lpb = "/leavepaintball", rev = "/requestevent",
             ha = "/heal", sa = "/stopanim", sc = "/spawnchange", qh = "/questhelp", ma = "/maraton", ra = "/raport",
         }
@@ -6786,7 +6814,6 @@ local function registerCommands()
             sampRegisterChatCommand(name, function() Queue.push(command) end)
         end
         sampRegisterChatCommand("cf", function() Queue.push("/cancel find") Queue.push("/killcp") end)
-        sampRegisterChatCommand("gk", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/givekey " .. id) end end)
     end
 end
 

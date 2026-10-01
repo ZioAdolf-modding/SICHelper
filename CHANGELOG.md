@@ -13,6 +13,12 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   Paramedics) si se poate schimba din `/sih` -> Features. Oprit din start.
   Daca nu ti-ai deblocat banii cu `/pin`, plata asteapta, te anunta pe ecran si pleaca singura
   imediat ce dai `/pin`; `/sicpay` o trimite pe loc.
+- Scurtaturi mereu disponibile, fara sa depinda de „Comenzi scurte generale": `/m` (`/members`),
+  `/cm` si `/CM` (`/clanmembers`), `/gk <id>` (`/givekey`) si `/rr` (swapjob + repair + refill).
+  `/rr` merge doar daca factiunea ta e School Instructors; la alta factiune iti spune asta si nu trimite nimic.
+- Lista din `/sih` -> General -> Comenzi se schimba odata cu factiunea aleasa: fiecare factiune isi are
+  lista ei in `config/SICHelper_data.lua` (`data.commands`), iar cele care nu au inca una primesc lista
+  generala, cu o linie care spune pe sleau ca restul comenzilor sunt in lucru.
 
 ### Reparat
 - Raportul de pe ecran nu mai numara ce nu numara nici serverul: cand progresul e plin (10/10),
