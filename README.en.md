@@ -7,7 +7,7 @@
 faction gets its own edition under the same family name - *CMDHelper - PD Edition* and so on. For
 now this is the only one.
 
-**Version:** 1.7.0-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
+**Version:** 1.7.1-beta · **Author:** ZioAdolf (Discord: `vlandrewz`) · **License:** GPL-3.0-or-later
 
 > **Official source: <https://github.com/ZioAdolf-modding/SICHelper>**
 > Any other copy, archive or build from another site, Discord or channel is not official and is not

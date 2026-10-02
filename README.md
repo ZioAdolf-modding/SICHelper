@@ -7,7 +7,7 @@
 factiune isi primeste editia ei sub acelasi nume de familie - *CMDHelper - PD Edition* si asa mai
 departe. Deocamdata exista doar aceasta.
 
-**Versiune:** 1.7.0-beta · **Autor:** ZioAdolf (Discord: `vlandrewz`) · **Licenta:** GPL-3.0-or-later
+**Versiune:** 1.7.1-beta · **Autor:** ZioAdolf (Discord: `vlandrewz`) · **Licenta:** GPL-3.0-or-later
 
 > **Sursa oficiala: <https://github.com/ZioAdolf-modding/SICHelper>**
 > Orice alta copie, arhiva sau build de pe alt site, Discord sau canal nu este oficiala si nu e

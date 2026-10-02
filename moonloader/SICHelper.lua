@@ -15,7 +15,7 @@
 -- ============================================================
 
 script_name("SICHelper")
-local VERSION = "1.7.0-beta"
+local VERSION = "1.7.1-beta"
 script_version(VERSION)
 script_description("CMDHelper, editia School Instructors - /sic, /sih, /withme, /sxwas, bind-uri")
 

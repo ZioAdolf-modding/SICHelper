@@ -2,7 +2,7 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
-## [Nepublicat]
+## [1.7.1-beta] — 2026-10-02
 
 ### Reparat
 - **Anularea FVR nu ajungea la factiune.** `/sfvr` oprea numaratoarea, dar numai tu vedeai asta:
