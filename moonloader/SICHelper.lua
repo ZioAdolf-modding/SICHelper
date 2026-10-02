@@ -384,6 +384,8 @@ local L = {
         ally_pin_short = "Da /pin: o plata catre aliat asteapta",
         ally_none_due = "Nicio plata in asteptare catre factiunea aliata.",
         g_sicpay = "trimite acum platile catre aliati care asteptau /pin",
+        coming_soon = "Coming Soon: /sic si /withme sunt ale editiei School Instructors.",
+        coming_soon_title = "Coming Soon", coming_soon_short = "/sic si /withme: doar la School Instructors",
         reset_layout = "Reseteaza aranjamentul", reset_done = "Ferestrele si HUD-urile au revenit la locul lor.",
         reset_layout_tip = "Readuce toate ferestrele si panourile de pe ecran la pozitia si marimea implicita (/sicreset).",
         ver_new = "Versiune noua disponibila: %s", ver_src = "- ia-o din Releases, de pe sursa oficiala",
@@ -628,6 +630,8 @@ local L = {
         ally_pin_short = "Type /pin: a payment to your ally is waiting",
         ally_none_due = "No payment waiting for the allied faction.",
         g_sicpay = "sends the ally payments that were waiting for /pin",
+        coming_soon = "Coming Soon: /sic and /withme belong to the School Instructors edition.",
+        coming_soon_title = "Coming Soon", coming_soon_short = "/sic and /withme: School Instructors only",
         reset_layout = "Reset the layout", reset_done = "Windows and HUDs are back in place.",
         reset_layout_tip = "Puts every window and on-screen panel back to its default position and size (/sicreset).",
         ver_new = "New version available: %s", ver_src = "- get it from Releases, on the official source",
@@ -1449,6 +1453,7 @@ local function licenseShortList(lics)
 end
 
 function Withme.start(id, lics)
+    if not App.siOnly() then return end
     id = requireOnline(id)
     if not id then return end
     if next(lics) == nil then err(tr("lic_needed")) return end
@@ -1495,6 +1500,7 @@ end
 
 -- deschide fereastra cu ID + licente
 function Withme.ask(prefillId)
+    if not App.siOnly() then return end
     Prompt.show({
         title = "Withme",
         id = prefillId,
@@ -2402,7 +2408,7 @@ Actions.list = {
         id = "sic", group = "hud",
         label_ro = "Arata / ascunde /sic", label_en = "Toggle /sic",
         hint = "/sic",
-        run = function() State.sic[0] = not State.sic[0] end,
+        run = function() if App.siOnly() then State.sic[0] = not State.sic[0] end end,
     },
     {
         id = "sih", group = "hud",
@@ -2471,6 +2477,11 @@ function Actions.syncCommands()
         sampRegisterChatCommand("rr", function() RR.start() end)
     else
         pcall(sampUnregisterChatCommand, "rr")
+    end
+    -- editia School Instructors: pe alta factiune inchidem ferestrele care nu-i apartin
+    if not want then
+        State.sic[0] = false
+        Prompt.close()
     end
     trace("comanda /rr " .. (want and "disponibila" or "scoasa") .. " (factiune: " .. tostring(cfg.main.factionId) .. ")")
 end
@@ -3912,6 +3923,15 @@ end
 -- limita e aproape atinsa, asa ca modulele noi nu mai primesc fiecare un nume propriu.
 -- ============================================================
 App = { Ver = {}, Info = {}, Wizard = {} }
+
+-- /sic si /withme sunt ale editiei School Instructors. Pe alta factiune nu se deschid: spunem
+-- "Coming Soon" si lasam fereastra inchisa. Intoarce true doar cand ai voie sa le folosesti.
+function App.siOnly()
+    if tostring(cfg.main.factionId) == "si" then return true end
+    err(tr("coming_soon"))
+    Notify.push(tr("coming_soon_title"), tr("coming_soon_short"))
+    return false
+end
 
 -- conditia de asezare a ferestrelor: normal "prima data", dar o jumatate de secunda dupa
 -- "Reseteaza aranjamentul" devine "intotdeauna", ca tot ce e pe ecran sa sara la locul implicit
@@ -6705,6 +6725,7 @@ local function registerCommands()
     end)
 
     sampRegisterChatCommand("sic", function()
+        if not App.siOnly() then return end
         State.sic[0] = not State.sic[0]
     end)
 

@@ -17,6 +17,9 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   ca factiunea primea anuntul la o secunda-doua dupa ce ceasul pornise deja.
 - `/fvr` trece acum in fata cozii, ca respawn-ul sa se intample cand a fost anuntat.
 - Daca pici de pe server in timpul numaratorii, FVR-ul se anuleaza singur.
+- `/sic` si `/withme` raspund cu **Coming Soon** pe orice alta factiune decat School Instructors:
+  sunt ferestrele editiei de instructori. Daca schimbi factiunea in `/sih` cat sunt deschise, se
+  inchid singure. Blocajul prinde toate caile: comanda, tasta, bara de iconite si butonul din `/info`.
 
 
 ## [1.7.0-beta] — 2026-10-01
