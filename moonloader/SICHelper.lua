@@ -89,8 +89,8 @@ K.THEORY_PAGESIZE  = 30      -- /pagesize la lectiile teoretice (limita serverul
 K.PAGESIZE_MIN, K.PAGESIZE_MAX = 10, 30
 K.RR_STEP_DELAY    = 1100    -- ms intre comenzile de la repair / refill (serverul are cooldown)
 
-K.LIC_FLYING, K.LIC_SAILING, K.LIC_FISHING, K.LIC_WEAPONS, K.LIC_MATERIALS, K.LIC_ALL =
-      "flying", "sailing", "fishing", "weapons", "materials", "all"
+K.LIC_FLYING, K.LIC_SAILING, K.LIC_FISHING, K.LIC_WEAPONS, K.LIC_MATERIALS, K.LIC_HUNTING, K.LIC_ALL =
+      "flying", "sailing", "fishing", "weapons", "materials", "hunting", "all"
 
 -- ============================================================
 -- DATE EDITABILE: preturi, texte de test, raspunsuri, tutorial
@@ -123,6 +123,7 @@ local Licenses = {
         { id = K.LIC_FISHING,   number = 3, server = "Fishing",   label = "Fishing",   short = "Fish", icon = fa.FISH          },
         { id = K.LIC_WEAPONS,   number = 4, server = "Weapon",    label = "Weapons",   short = "Weap", icon = fa.GUN           },
         { id = K.LIC_MATERIALS, number = 5, server = "Materials", label = "Materials", short = "Mat",  icon = fa.BOXES_STACKED },
+        { id = K.LIC_HUNTING,   number = 7, server = "Hunting",   label = "Hunting",   short = "Hunt", icon = fa.PAW           },
         { id = K.LIC_ALL,       number = 6, server = nil,         label = "All",       short = "All",  icon = fa.CROWN         },
     },
     byId = {},
@@ -151,6 +152,7 @@ local TEST_ORDER = {
     { id = "fish", licId = K.LIC_FISHING   },
     { id = "weap", licId = K.LIC_WEAPONS   },
     { id = "mat",  licId = K.LIC_MATERIALS },
+    { id = "hunt", licId = K.LIC_HUNTING   },
 }
 local Tests = {}
 for _, t in ipairs(TEST_ORDER) do
@@ -578,9 +580,10 @@ local L = {
         not_online = "Nu exista un jucator online cu id-ul %d.",
         bad_id = "ID invalid.",
         bad_lic = "Licenta invalida. Foloseste un numar de la 1 la 6.",
-        lic_list = "1 Flying, 2 Sailing, 3 Fishing, 4 Weapons, 5 Materials, 6 Toate",
+        lic_list = "1 Flying, 2 Sailing, 3 Fishing, 4 Weapons, 5 Materials, 6 Toate, 7 Hunting",
+        lic_min_level = "%s cere nivel %d, iar jucatorul are %d. Licenta nu a fost trimisa.",
         lic_needed = "Alege cel putin o licenta.",
-        usage_withme = "/withme <id> <1-6> [1-6 ...]  sau  /withme pentru fereastra",
+        usage_withme = "/withme <id> <1-7> [1-7 ...]  sau  /withme pentru fereastra",
         usage_sxwas = "/sxwas <id>",
         withme_busy = "Astept inca raspunsul de la /id pentru comanda anterioara.",
         withme_timeout = "Nu am primit nivelul de la /id; mesajul pe /f NU a fost trimis.",
@@ -595,7 +598,7 @@ local L = {
         given = "Ai oferit licenta %s jucatorului %s.",
         chain = "Continui automat cu: %s",
         tab_fly = "Flying", tab_sail = "Sailing", tab_fish = "Fishing", tab_weap = "Weapons",
-        tab_mat = "Materials", tab_lvl50 = "Level 50+",
+        tab_mat = "Materials", tab_hunt = "Hunting", tab_lvl50 = "Level 50+",
     },
     [K.LANG_EN] = {
         tab_general = "General", tab_binds = "Binds",
@@ -824,9 +827,10 @@ local L = {
         not_online = "There is no online player with id %d.",
         bad_id = "Invalid ID.",
         bad_lic = "Invalid license. Use a number from 1 to 6.",
-        lic_list = "1 Flying, 2 Sailing, 3 Fishing, 4 Weapons, 5 Materials, 6 All",
+        lic_list = "1 Flying, 2 Sailing, 3 Fishing, 4 Weapons, 5 Materials, 6 All, 7 Hunting",
+        lic_min_level = "%s needs level %d and the player is %d. The license was not sent.",
         lic_needed = "Pick at least one license.",
-        usage_withme = "/withme <id> <1-6> [1-6 ...]  or  /withme for the window",
+        usage_withme = "/withme <id> <1-7> [1-7 ...]  or  /withme for the window",
         usage_sxwas = "/sxwas <id>",
         withme_busy = "Still waiting for the /id reply of the previous command.",
         withme_timeout = "No level received from /id; the /f message was NOT sent.",
@@ -841,7 +845,7 @@ local L = {
         given = "You offered the %s license to %s.",
         chain = "Continuing automatically with: %s",
         tab_fly = "Flying", tab_sail = "Sailing", tab_fish = "Fishing", tab_weap = "Weapons",
-        tab_mat = "Materials", tab_lvl50 = "Level 50+",
+        tab_mat = "Materials", tab_hunt = "Hunting", tab_lvl50 = "Level 50+",
     },
 }
 
@@ -1062,6 +1066,7 @@ local DIALOG_LICENSES = {
     { find = "licenta de pescar",    id = K.LIC_FISHING   },
     { find = "permis de port-arma",  id = K.LIC_WEAPONS   },
     { find = "licenta de materiale", id = K.LIC_MATERIALS },
+    { find = "licenta de vanatoare", id = K.LIC_HUNTING   },
 }
 K.RENEW_MAX_HOURS = 50   -- sub atatea ore ramase se poate da renew
 
@@ -1613,6 +1618,14 @@ function Give.one(id, licId)
     if lastGive.key == key and os.clock() - lastGive.at < 3 then return true end
     lastGive.key, lastGive.at = key, os.clock()
     local lic = Licenses.byId[licId]
+    -- nivelul minim al licentei: daca il stim si e prea mic, nu trimitem nimic
+    local level = playerLevel(id)
+    local w = Withme.last
+    if w and w.id == id then level = w.level end
+    if level and lic.minLevel and level < lic.minLevel then
+        err(tr("lic_min_level", lic.label, lic.minLevel, level))
+        return false
+    end
     Queue.push("/givelicense " .. id .. " " .. lic.server)
     -- raportul NU creste aici: punctul se ia abia cand jucatorul accepta licenta (vezi Give.onAccepted)
     Check.mark(id, "finish")
@@ -1719,6 +1732,7 @@ local LICENSE_WORDS = {
     { K.LIC_FISHING,   "fishing",   "pescar"    },
     { K.LIC_WEAPONS,   "weapon",    "port-arma" },
     { K.LIC_MATERIALS, "materials", "materiale" },
+    { K.LIC_HUNTING,   "hunting",   "vanatoare" },
 }
 local function licenseInText(text)
     local low = text:lower()
@@ -6853,7 +6867,7 @@ local function registerCommands()
     sampRegisterChatCommand("rl", function(arg) local id = idOrCandidate(arg) if id then Queue.push("/requestlicenses " .. id) end end)
     sampRegisterChatCommand("sl", function(arg) local id = idOrCandidate(arg) if id then stopLesson(id) end end)
     -- give / start lesson pe licenta: gw gm gs gf gfl / sw sm ss sf sfl
-    local licShort = { w = K.LIC_WEAPONS, m = K.LIC_MATERIALS, s = K.LIC_SAILING, f = K.LIC_FISHING, fl = K.LIC_FLYING }
+    local licShort = { w = K.LIC_WEAPONS, m = K.LIC_MATERIALS, s = K.LIC_SAILING, f = K.LIC_FISHING, fl = K.LIC_FLYING, h = K.LIC_HUNTING }
     for short, licId in pairs(licShort) do
         sampRegisterChatCommand("g" .. short, function(arg) local id = idOrCandidate(arg) if id then Give.one(id, licId) end end)
         sampRegisterChatCommand("s" .. short, function(arg)
@@ -6865,7 +6879,7 @@ local function registerCommands()
         end)
     end
     -- textele testelor: w1..w5, m1..m4, f1..f4, lsfl1..3 / lvfl / sffl (Flying), lss1..2 / lvs / sfs (Sailing)
-    local testShort = { weap = "w", mat = "m", fish = "f", fly = "fl", sail = "s" }
+    local testShort = { weap = "w", mat = "m", fish = "f", fly = "fl", sail = "s", hunt = "h" }
     for _, test in ipairs(Tests) do
         local short = testShort[test.id]
         if short then

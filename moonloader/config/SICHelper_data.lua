@@ -27,12 +27,46 @@ data.prices = {
     fishing   = { minLevel = 1, low = 250,  mid = 500,  high = 1000 },
     weapons   = { minLevel = 5, low = 1000, mid = 2000, high = 4000 },
     materials = { minLevel = 3, low = 800,  mid = 1600, high = 3200 },
+    hunting   = { minLevel = 5, low = 1950, mid = 3900, high = 5200 },
 }
 
 -- ------------------------------------------------------------
 -- TESTE (textele sunt cele din SIHelper / procedura factiunii, neschimbate)
 -- ------------------------------------------------------------
 data.tests = {
+
+    hunt = {
+        prefix = "Q", city = false,
+        buttons = { {1}, {2}, {3}, {4}, {5}, {6} },
+        texts = {
+            en = {
+                "1. What do you receive if you kill an animal without a valid Hunting License?",
+                "2. What other license do you need to hunt, besides the Hunting License?",
+                "3. What do you receive if you skin an animal without a valid Hunting License?",
+                "4. Where can you sell the resources obtained from the Hunter job?",
+                "5. Which command do you need to use to start working at the Hunter job?",
+                "6. Name 4 resources you can obtain after skinning an animal",
+            },
+            -- traducere de lucru: confirma formularea oficiala in romana inainte sa o folosesti la teste
+            ro = {
+                "1. Ce primesti daca omori un animal fara Licenta de Vanatoare valida?",
+                "2. De ce alta licenta mai ai nevoie ca sa vanezi, in afara de Licenta de Vanatoare?",
+                "3. Ce primesti daca jupoi un animal fara Licenta de Vanatoare valida?",
+                "4. Unde poti vinde resursele obtinute de la job-ul de Hunter?",
+                "5. Ce comanda folosesti ca sa incepi lucrul la job-ul de Hunter?",
+                "6. Numeste 4 resurse pe care le poti obtine dupa ce jupoi un animal",
+            },
+        },
+        -- Raspunsurile 1, 3, 4 si 6 sunt luate din anuntul oficial al jobului Vanator.
+        -- 2 si 5 NU sunt scrise acolo: sunt deduse (arma cere permis de port-arma; celelalte joburi
+        -- pornesc cu /work). Confirma-le o data in joc si corecteaza aici daca difera.
+        answers = {
+            en = { "Wanted 1", "Weapon License", "Wanted 1", "At the Hunting Merchant (press Y)",
+                   "/work", "Meat, skin, fat, bones (deer: venison, skin, antlers, bones)" },
+            ro = { "Wanted 1", "Permisul de port-arma", "Wanted 1", "La Comerciantul de Vanatoare (tasta Y)",
+                   "/work", "Carne, piele, grasime, oase (la cerb: carne de cerb, piele, coarne, oase)" },
+        },
+    },
 
     fly = {
         prefix = "T", city = true,

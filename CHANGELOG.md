@@ -2,6 +2,18 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
+## [Nepublicat]
+
+### Adaugat
+- **Licenta de Vanatoare (Hunting)**, noua pe server: tab propriu in `/sic` cu cele 6 intrebari ale
+  testului, pret dupa nivel (5-9: $1.950, 10-49: $3.900, 50+: $5.200), nivel minim 5, scurtaturile
+  `/gh` si `/sh`, textele intrebarilor pe `/h1`..`/h6`, si numarul **7** in `/withme` si `/giveme`
+  (6 ramane „toate", ca sa nu dea nimeni alta licenta din reflex). Se recunoaste si in dialogul de
+  la `/requestlicenses`, si in liniile prin care serverul confirma acordarea.
+- **Eroare la nivel prea mic**: daca stim nivelul jucatorului si e sub minimul licentei, helperul
+  nu mai trimite `/givelicense` si iti spune de ce. Se aplica la toate licentele, nu doar la cea noua.
+
+
 ## [1.7.1-beta] — 2026-10-02
 
 ### Reparat
