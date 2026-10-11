@@ -2,7 +2,7 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
-## [Nepublicat]
+## [1.8.0-beta] — 2026-10-11
 
 ### Adaugat
 - **Licenta de Vanatoare (Hunting)**, noua pe server: tab propriu in `/sic` cu cele 6 intrebari ale
