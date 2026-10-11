@@ -570,7 +570,8 @@ local L = {
         g_shorts1 = "comenzile din SIHelper by AdeM: accept needlicense / requestlicenses / stoplesson (fara id: candidatul)",
         g_shorts2 = "give license: Weapon / Materials / Sailing / Fishing / Flying candidatului",
         g_shorts3 = "start lesson pe aceeasi licenta; /ccc curata chatul",
-        g_shorts4 = "textele testelor: w1-5, m1-4, f1-4, lsfl1-3 / lvfl / sffl, lss1-2 / lvs / sfs",
+        g_shorts5 = "swapjob+repair+refill, givekey, members, clanmembers",
+        g_shorts4 = "textele testelor: w1-5, m1-4, f1-4, h1-6, lsfl1-3 / lvfl / sffl, lss1-2 / lvs / sfs",
         g_auto = "Candidatul se retine singur cand accepti un /needlicense; e folosit de request / stop si de tab-ul 50+.",
         g_binds = "Bind-urile nu se declanseaza cand scrii in chat, in dialog sau in meniul de pauza.",
         -- fereastra withme / cere ID
@@ -817,7 +818,8 @@ local L = {
         g_shorts1 = "the commands from SIHelper by AdeM: accept needlicense / requestlicenses / stoplesson (no id: the candidate)",
         g_shorts2 = "give license: Weapon / Materials / Sailing / Fishing / Flying to the candidate",
         g_shorts3 = "start lesson for the same license; /ccc clears the chat",
-        g_shorts4 = "test texts: w1-5, m1-4, f1-4, lsfl1-3 / lvfl / sffl, lss1-2 / lvs / sfs",
+        g_shorts5 = "swapjob+repair+refill, givekey, members, clanmembers",
+        g_shorts4 = "test texts: w1-5, m1-4, f1-4, h1-6, lsfl1-3 / lvfl / sffl, lss1-2 / lvs / sfs",
         g_auto = "The candidate is stored automatically when you accept a /needlicense; it is used by request / stop and by the 50+ tab.",
         g_binds = "Binds do not fire while typing in chat, in a dialog or in the pause menu.",
         -- withme / ask-ID window
@@ -4875,13 +4877,13 @@ local function drawGeneralTab()
     if not facCmds and tostring(cfg.main.factionId) ~= "si" then
         facCmds = Data and Data.commands and Data.commands.default
     end
-    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", facCmds and #facCmds or 21)) then
+    if Gen.section("cmds", tr("sec_cmds") .. "  " .. myFaction.label, tr("cmds_count", facCmds and #facCmds or 22)) then
         if facCmds then
             for _, c in ipairs(facCmds) do guideLine(tostring(c[1]), tostring(c[2])) end
         else
         guideLine("/sic",               tr("g_sic"))
         guideLine("/sih",               tr("g_sih"))
-        guideLine("/withme <id> <1-6>", tr("g_withme"))
+        guideLine("/withme <id> <1-7>", tr("g_withme"))
         guideLine("/withme",            tr("g_withme0"))
         guideLine("/sxwas <id>",        tr("g_sxwas"))
         guideLine("/siccand <id>",      tr("g_siccand"))
@@ -4898,7 +4900,8 @@ local function drawGeneralTab()
         guideLine("/acc /rl /sl <id>",  tr("g_shorts1"))
         guideLine("/gw /gm /gs /gf /gfl", tr("g_shorts2"))
         guideLine("/sw /sm /ss /sf /sfl", tr("g_shorts3"))
-        guideLine("/w1 /m1 /f1 /lsfl1",  tr("g_shorts4"))
+        guideLine("/w1 /m1 /h1 /lsfl1", tr("g_shorts4"))
+        guideLine("/rr /gk /m /cm",     tr("g_shorts5"))
         guideLine("/ffvr  /sfvr",       tr("f_fvrOn_tip"))
         end
         imgui.Dummy(imgui.ImVec2(0, px(4)))
@@ -4921,7 +4924,7 @@ local function drawCommandsSection()
 
     -- in ordinea in care se folosesc: sxwas (jucator de pe strada) -> withme -> test
     guideLine("/sxwas <id>",        tr("g_sxwas"))
-    guideLine("/withme <id> <1-6>", tr("g_withme"))
+    guideLine("/withme <id> <1-7>", tr("g_withme"))
     guideLine("/withme",            tr("g_withme0"))
     guideLine("/siccand <id>",      tr("g_siccand"))
     guideLine("/sic",               tr("g_sic"))
