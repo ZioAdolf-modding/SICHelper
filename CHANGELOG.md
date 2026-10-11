@@ -12,6 +12,9 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   la `/requestlicenses`, si in liniile prin care serverul confirma acordarea.
 - **Eroare la nivel prea mic**: daca stim nivelul jucatorului si e sub minimul licentei, helperul
   nu mai trimite `/givelicense` si iti spune de ce. Se aplica la toate licentele, nu doar la cea noua.
+- Nivelul minim corectat: Flying, Sailing si Materials se pot lua de la **nivel 1**, nu de la 3.
+  Era gresit si in preturi, si in titlurile din Tutorial. Doar Weapons si Hunting cer nivel 5.
+- Tutorialul are acum si sectiunea **Hunting**, in romana si engleza.
 
 
 ## [1.7.1-beta] — 2026-10-02

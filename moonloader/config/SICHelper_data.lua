@@ -22,11 +22,11 @@ local data = {}
 -- PRETURI (topicul de pe forum "Preturi licente")
 -- ------------------------------------------------------------
 data.prices = {
-    flying    = { minLevel = 3, low = 900,  mid = 1800, high = 3600 },
-    sailing   = { minLevel = 3, low = 850,  mid = 1700, high = 3400 },
+    flying    = { minLevel = 1, low = 900,  mid = 1800, high = 3600 },
+    sailing   = { minLevel = 1, low = 850,  mid = 1700, high = 3400 },
     fishing   = { minLevel = 1, low = 250,  mid = 500,  high = 1000 },
     weapons   = { minLevel = 5, low = 1000, mid = 2000, high = 4000 },
-    materials = { minLevel = 3, low = 800,  mid = 1600, high = 3200 },
+    materials = { minLevel = 1, low = 800,  mid = 1600, high = 3200 },
     hunting   = { minLevel = 5, low = 1950, mid = 3900, high = 5200 },
 }
 
@@ -437,7 +437,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Flying (nivel minim 3)",
+            title = "Flying (nivel minim 1)",
             lines = {
                 "SF: du candidatul la SFSI HQ. LS: la Los Santos Airport. LV: la Las Venturas Abandoned Airport.",
                 "- Ii ceri sa zboare la unul dintre aeroporturi (LV Abandoned, LV, LS sau SF - nu cel de plecare).",
@@ -448,7 +448,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Sailing (nivel minim 3)",
+            title = "Sailing (nivel minim 1)",
             lines = {
                 "SF: plecare din West Docks (San Fierro) -> Bayside Docks (stanga sus pe harta) -> inapoi.",
                 "LS: plecare din Playa Del Seville -> Santa Maria Beach (langa far) -> inapoi.",
@@ -466,7 +466,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Materials (nivel minim 3)",
+            title = "Materials (nivel minim 1)",
             lines = {
                 "- Pui cele 4 intrebari din /sic (Q1-Q4).",
                 "- Daca nu raspunde sau greseste una, a picat. Altfel a trecut.",
@@ -479,6 +479,16 @@ data.tutorial = {
                 "- Pui cele 5 intrebari din /sic (Q1-Q5).",
                 "- Daca nu raspunde sau greseste una, a picat. Altfel a trecut.",
                 "Preturi: 5-9 $1.000 | 10-49 $2.000 | 50+ $4.000",
+            },
+        },
+        {
+            title = "Hunting (nivel minim 5)",
+            lines = {
+                "- Nivel 5-49: se face lectia. Nivel 50+: se da direct, fara test.",
+                "- Pui cele 6 intrebari din tabul Hunting al ferestrei /sic (Q1-Q6).",
+                "- Daca nu raspunde sau greseste una singura, a picat. Altfel a trecut.",
+                "Preturi: 5-9 $1.950 | 10-49 $3.900 | 50+ $5.200",
+                "- Vanatoarea fara licenta valabila e ilegala: uciderea unui animal da Wanted 1, iar jupuirea inca unul.",
             },
         },
     },
@@ -496,7 +506,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Flying (min level 3)",
+            title = "Flying (min level 1)",
             lines = {
                 "SF: take the client to SFSI HQ. LS: Los Santos Airport. LV: Las Venturas Abandoned Airport.",
                 "- Ask them to fly to one of the airports (LV Abandoned, LV, LS or SF - not the starting one).",
@@ -507,7 +517,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Sailing (min level 3)",
+            title = "Sailing (min level 1)",
             lines = {
                 "SF: start at West Docks (San Fierro) -> Bayside Docks (top left of the map) -> back.",
                 "LS: start at Playa Del Seville -> Santa Maria Beach (near the lighthouse) -> back.",
@@ -525,7 +535,7 @@ data.tutorial = {
             },
         },
         {
-            title = "Materials (min level 3)",
+            title = "Materials (min level 1)",
             lines = {
                 "- Ask the 4 questions from /sic (Q1-Q4).",
                 "- If they fail to reply or get one wrong, they fail. Otherwise they pass.",
@@ -538,6 +548,16 @@ data.tutorial = {
                 "- Ask the 5 questions from /sic (Q1-Q5).",
                 "- If they fail to reply or get one wrong, they fail. Otherwise they pass.",
                 "Prices: 5-9 $1.000 | 10-49 $2.000 | 50+ $4.000",
+            },
+        },
+        {
+            title = "Hunting (min level 5)",
+            lines = {
+                "- Level 5-49: they do the lesson. Level 50+: given directly, no test.",
+                "- Ask the 6 questions from the Hunting tab of /sic (Q1-Q6).",
+                "- If they fail to reply or get one wrong, they fail. Otherwise they pass.",
+                "Prices: 5-9 $1.950 | 10-49 $3.900 | 50+ $5.200",
+                "- Hunting without a valid license is illegal: killing an animal gives Wanted 1, skinning gives another.",
             },
         },
     },
