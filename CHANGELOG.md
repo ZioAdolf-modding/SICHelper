@@ -15,6 +15,8 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
 - Nivelul minim corectat: Flying, Sailing si Materials se pot lua de la **nivel 1**, nu de la 3.
   Era gresit si in preturi, si in titlurile din Tutorial. Doar Weapons si Hunting cer nivel 5.
 - Tutorialul are acum si sectiunea **Hunting**, in romana si engleza.
+- Anuntul de la `/withme` leaga ultima licenta cu „and", nu cu inca o virgula:
+  *Flying and Sailing licenses*, *Flying, Sailing and Hunting licenses*.
 
 
 ## [1.7.1-beta] — 2026-10-02

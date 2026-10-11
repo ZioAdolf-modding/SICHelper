@@ -1444,7 +1444,14 @@ local function licensePhrase(lics)
     for _, lic in ipairs(Licenses.real) do
         if lics[lic.id] then table.insert(names, lic.server) end
     end
-    return table.concat(names, ", ") .. (#names == 1 and " license" or " licenses")
+    if #names == 0 then return "" end
+    -- gramatica anuntului: ultima licenta se leaga cu "and", nu cu inca o virgula
+    -- (Flying license / Flying and Sailing licenses / Flying, Sailing and Fishing licenses)
+    local list = names[1]
+    for i = 2, #names do
+        list = list .. ((i == #names) and " and " or ", ") .. names[i]
+    end
+    return list .. ((#names == 1) and " license" or " licenses")
 end
 
 -- lista scurta pentru chat / interfata: "Fly, Sail"
