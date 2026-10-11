@@ -78,6 +78,7 @@ K.ALLY_DELAY   = 2200        -- ms de asteptat inainte de /pay (serverul cere pa
 K.ALLY_MAX_AGE = 180         -- secunde cat mai asteapta o plata neexpediata (fara /pin)
 K.ALLY_WARN    = 20          -- secunde intre doua atentionari "da /pin"
 K.FVR_LATE     = 30          -- secunde cat mai spunem "prea tarziu" dupa ce /fvr a plecat
+K.ACCEPT_WAIT  = 8           -- secunde de asteptat confirmarea serverului ca EU am luat cererea
 
 -- valori cu semnificatie fixa: in cod se folosesc DOAR aceste nume, nu cifre / stringuri goale
 K.LANG_RO, K.LANG_EN                                 = "ro", "en"
@@ -2264,6 +2265,16 @@ function Check.onShot(suffix)
     if step then Check.shot[step] = true end
 end
 
+-- daca serverul nu spune in cateva secunde cine a luat cererea, presupunem ca a fost a noastra:
+-- mai bine panoul de dovezi apare cu intarziere decat sa nu apara deloc
+function Check.update()
+    local p = Check.pending
+    if not p or os.clock() - p.at < K.ACCEPT_WAIT then return end
+    Check.pending = nil
+    Check.mark(p.id, "accept")
+    trace("accept: nicio confirmare in " .. K.ACCEPT_WAIT .. " s, presupun ca cererea e a mea")
+end
+
 function Check.count()
     local n = 0
     for _, s in ipairs(CHECK_STEPS) do if Check.done[s] then n = n + 1 end end
@@ -2298,7 +2309,9 @@ local function sendAccept(id)
         for _, c in ipairs(Data.clear_checkpoint or { "/killcp" }) do Queue.push(c) end
     end
     Queue.push("/accept needlicense " .. id)
-    Check.mark(id, "accept")
+    -- panoul de dovezi NU apare acum: asteptam confirmarea serverului ca eu am luat cererea,
+    -- nu altcineva care a fost mai rapid (vezi Need.takenBy si Check.update)
+    Check.pending = { id = id, at = os.clock() }
     State.acceptSentAt = os.clock()
     State.acceptedId = id            -- pe cine am acceptat: daca cererea e luata de altcineva, stergem checkpoint-ul lui
     Sms.schedule(id)
@@ -6323,9 +6336,9 @@ imgui.OnFrame(function() return State.focused and (State.sic[0] or State.sicFade
     end
     imgui.EndChild()
 
-    -- ultimul mesaj trimis, ca sa nu te uiti in chat
-    imgui.Separator()
-    if feat("sicLastSent") then
+    -- ultimul mesaj trimis, ca sa nu te uiti in chat; la 50+ nu exista task sau intrebare, deci nici rand
+    if feat("sicLastSent") and State.sicTab ~= K.TAB_LEVEL50 then
+        imgui.Separator()
         local last = Queue.lastSent or tr("sic_nothing")
         if #last > 38 then last = last:sub(1, 36) .. ".." end
         TC(DIM, u8(last))
@@ -6423,6 +6436,13 @@ end
 
 -- alt instructor a acceptat cererea jucatorului dat: se noteaza in lista de asteptare si pe cartonasul
 -- deja afisat (daca e), care mai ramane putin si spune cine a preluat-o
+-- linia serverului spune cine a acceptat; numele poate veni cu tag-ul clanului lipit in fata
+function Need.acceptedByMe(instructor)
+    local me = playerName(myPlayerId())
+    if not me or me == "" or not instructor then return false end
+    return tostring(instructor):find(me, 1, true) ~= nil
+end
+
 function Need.takenBy(instructor, playerName_)
     local pid = findPlayerByName(playerName_)
     for _, e in ipairs(Need.queue) do
@@ -6437,6 +6457,16 @@ function Need.takenBy(instructor, playerName_)
         end
     end
     if LastNeed.id == pid then LastNeed.takenBy = instructor end
+    -- panoul de dovezi apare abia cand serverul confirma ca eu am luat cererea
+    local p = Check.pending
+    if p and pid and p.id == pid then
+        Check.pending = nil
+        if Need.acceptedByMe(instructor) then
+            Check.mark(pid, "accept")
+        else
+            trace("accept: cererea lui " .. tostring(playerName_) .. " a fost luata de " .. tostring(instructor))
+        end
+    end
     -- daca eu acceptasem cererea asta, checkpoint-ul de pe drum nu mai are rost: il sterg si il scot din legenda
     if pid and State.acceptedId == pid then
         State.acceptedId = nil
@@ -6994,6 +7024,7 @@ function main()
         Sms.update()
         Need.flush()
         Need.update()
+        Check.update()
         RR.update()
         Notify.update()
         App.Ver.update()

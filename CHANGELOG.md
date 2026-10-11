@@ -2,6 +2,16 @@
 
 Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [SemVer](https://semver.org/lang/ro/).
 
+## [Nepublicat]
+
+### Schimbat
+- **Panoul de dovezi nu mai apare degeaba.** Pana acum se deschidea in clipa in care trimiteai
+  `/accept needlicense`, chiar daca alt instructor lua cererea inaintea ta. Acum asteapta linia prin
+  care serverul spune cine a acceptat: daca ai fost tu, apare; daca a fost altcineva, nu mai apare
+  deloc. Daca serverul nu zice nimic in 8 secunde, se deschide oricum - mai bine tarziu decat niciodata.
+- Randul cu ultimul mesaj trimis nu mai apare pe tabul **50+**: acolo nu exista task sau intrebare.
+
+
 ## [1.8.0-beta] — 2026-10-11
 
 ### Adaugat
