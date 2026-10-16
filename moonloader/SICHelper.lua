@@ -216,7 +216,7 @@ K.HOVER_TIP_DELAY = 1.5   -- secunde de stat cu cursorul pe un buton T/Q pana ap
 local MSG = {
     withme        = "%s (%d) is with me for %s.",
     withme_lvl50  = " He is level 50+.",
-    withme_lvl50_line = "%s (%d) is level 50+.",
+    withme_lvl50_line = "He is level 50+.",   -- al doilea mesaj, cand anuntul nu incape pe o linie
     sxwas = {
         [K.LANG_RO] = "L-a acceptat cineva pe %s (%d)?",
         [K.LANG_EN] = "Has anyone accepted %s (%d)?",
@@ -1499,7 +1499,7 @@ end
 -- 4. nume foarte lungi la amandoi: licentele impartite pe doua linii
 function Withme.lines(p, level)
     local is50 = level >= 50
-    local lvlLine = is50 and string.format(MSG.withme_lvl50_line, p.name, p.id) or nil
+    local lvlLine = is50 and MSG.withme_lvl50_line or nil
     local function withLvl(t) if lvlLine then table.insert(t, lvlLine) end return t end
     local full = string.format(MSG.withme, p.name, p.id, licensePhrase(p.lics))
     if is50 and Withme.fits(full .. MSG.withme_lvl50) then return { full .. MSG.withme_lvl50 } end

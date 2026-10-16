@@ -17,7 +17,8 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   afiseaza deloc o linie de chat de peste 144 de caractere - nu o taie, o pierde. Cu 4 licente,
   „He is level 50+." si nume lungi, linia ajungea la 146. Acum helperul estimeaza linia finala
   (dupa numele tau si cel mai lung titlu de rang) si o face sa incapa: muta nivelul 50+ pe o linie
-  separata, apoi scrie licentele prescurtat, iar in cazul extrem le imparte pe doua linii.
+  separata - „He is level 50+.", trimis imediat dupa anunt - apoi scrie licentele prescurtat, iar in
+  cazul extrem le imparte pe doua linii.
   Toate licentele bifate una cate una devin „all licenses".
 
 
