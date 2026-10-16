@@ -11,6 +11,15 @@ Formatul: [Keep a Changelog](https://keepachangelog.com/ro/1.1.0/); versionare [
   deloc. Daca serverul nu zice nimic in 8 secunde, se deschide oricum - mai bine tarziu decat niciodata.
 - Randul cu ultimul mesaj trimis nu mai apare pe tabul **50+**: acolo nu exista task sau intrebare.
 
+### Reparat
+- **Anuntul de la `/withme` disparea uneori fara urma.** Serverul afiseaza `/f` ca
+  `** (5) SF Manager [XO]Nume: (( text )) **`, adica adauga peste 40 de caractere, iar SA-MP nu
+  afiseaza deloc o linie de chat de peste 144 de caractere - nu o taie, o pierde. Cu 4 licente,
+  „He is level 50+." si nume lungi, linia ajungea la 146. Acum helperul estimeaza linia finala
+  (dupa numele tau si cel mai lung titlu de rang) si o face sa incapa: muta nivelul 50+ pe o linie
+  separata, apoi scrie licentele prescurtat, iar in cazul extrem le imparte pe doua linii.
+  Toate licentele bifate una cate una devin „all licenses".
+
 
 ## [1.8.0-beta] — 2026-10-11
 

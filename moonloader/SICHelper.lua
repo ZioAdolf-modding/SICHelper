@@ -79,6 +79,9 @@ K.ALLY_MAX_AGE = 180         -- secunde cat mai asteapta o plata neexpediata (fa
 K.ALLY_WARN    = 20          -- secunde intre doua atentionari "da /pin"
 K.FVR_LATE     = 30          -- secunde cat mai spunem "prea tarziu" dupa ce /fvr a plecat
 K.ACCEPT_WAIT  = 8           -- secunde de asteptat confirmarea serverului ca EU am luat cererea
+K.CHAT_LINE_MAX = 144       -- SA-MP nu afiseaza deloc o linie de chat mai lunga (o pierde fara eroare)
+K.F_OVERHEAD   = 39          -- ce adauga serverul pe /f in jurul textului, fara numele nostru:
+                             -- "** (3) " + "SF Senior Instructor" (cel mai lung titlu) + " " + ": (( " + " )) **"
 
 -- valori cu semnificatie fixa: in cod se folosesc DOAR aceste nume, nu cifre / stringuri goale
 K.LANG_RO, K.LANG_EN                                 = "ro", "en"
@@ -213,6 +216,7 @@ K.HOVER_TIP_DELAY = 1.5   -- secunde de stat cu cursorul pe un buton T/Q pana ap
 local MSG = {
     withme        = "%s (%d) is with me for %s.",
     withme_lvl50  = " He is level 50+.",
+    withme_lvl50_line = "%s (%d) is level 50+.",
     sxwas = {
         [K.LANG_RO] = "L-a acceptat cineva pe %s (%d)?",
         [K.LANG_EN] = "Has anyone accepted %s (%d)?",
@@ -1441,12 +1445,14 @@ local Withme = {
 
 -- lista de licente pentru mesajul /f, in formatul folosit de factiune:
 -- "Flying license", "Flying, Fishing, Weapon licenses", "all licenses"
-local function licensePhrase(lics)
+local function licensePhrase(lics, short)
     if lics[K.LIC_ALL] then return "all licenses" end
     local names = {}
     for _, lic in ipairs(Licenses.real) do
-        if lics[lic.id] then table.insert(names, lic.server) end
+        if lics[lic.id] then table.insert(names, short and lic.short or lic.server) end
     end
+    -- toate licentele bifate una cate una inseamna acelasi lucru ca "toate", si e mult mai scurt
+    if #names == #Licenses.real then return "all licenses" end
     if #names == 0 then return "" end
     -- gramatica anuntului: ultima licenta se leaga cu "and", nu cu inca o virgula
     -- (Flying license / Flying and Sailing licenses / Flying, Sailing and Fishing licenses)
@@ -1480,22 +1486,56 @@ function Withme.start(id, lics)
 end
 
 -- apelat din onServerMessage cand apare linia "| Level: N"
+-- Serverul afiseaza /f ca "** (5) SF Manager [XO]Nume: (( text )) **", iar SA-MP nu afiseaza
+-- DELOC o linie mai lunga de 144 de caractere: o pierde pe drum, fara nicio eroare - nici tu nu o
+-- vezi. Estimam linia dupa numele nostru si cel mai lung titlu de rang posibil.
+function Withme.fits(text)
+    local me = playerName(myPlayerId()) or ""
+    return #text + #me + K.F_OVERHEAD <= K.CHAT_LINE_MAX
+end
+
+-- anuntul, astfel incat sa incapa mereu, in pasi tot mai stransi:
+-- 1. totul pe o linie; 2. nivelul 50+ pe linie separata; 3. licentele prescurtate (Fly, Sail...);
+-- 4. nume foarte lungi la amandoi: licentele impartite pe doua linii
+function Withme.lines(p, level)
+    local is50 = level >= 50
+    local lvlLine = is50 and string.format(MSG.withme_lvl50_line, p.name, p.id) or nil
+    local function withLvl(t) if lvlLine then table.insert(t, lvlLine) end return t end
+    local full = string.format(MSG.withme, p.name, p.id, licensePhrase(p.lics))
+    if is50 and Withme.fits(full .. MSG.withme_lvl50) then return { full .. MSG.withme_lvl50 } end
+    if not is50 and Withme.fits(full) then return { full } end
+    if Withme.fits(full) then return withLvl({ full }) end
+    local short = string.format(MSG.withme, p.name, p.id, licensePhrase(p.lics, true))
+    if Withme.fits(short) then return withLvl({ short }) end
+    local names = {}
+    for _, lic in ipairs(Licenses.real) do
+        if p.lics[lic.id] then table.insert(names, lic.short) end
+    end
+    local half = math.ceil(#names / 2)
+    local a, b = {}, {}
+    for i, n in ipairs(names) do table.insert((i <= half) and a or b, n) end
+    return withLvl({
+        string.format(MSG.withme, p.name, p.id, table.concat(a, ", ") .. " licenses"),
+        string.format(MSG.withme, p.name, p.id, table.concat(b, ", ") .. " licenses"),
+    })
+end
+
 function Withme.onLevel(level)
     local p = Withme.pending
     if not p then return end
     Withme.pending = nil
 
-    local text = string.format(MSG.withme, p.name, p.id, licensePhrase(p.lics))
-    if level >= 50 then text = text .. MSG.withme_lvl50 end
+    local lines = Withme.lines(p, level)
 
     -- /withme seteaza candidatul doar daca nu exista deja unul venit din /accept needlicense (acela are prioritate)
     if Candidate.source ~= "accept" or Candidate.id == p.id then Candidate.set(p.id, p.name, "withme") end
     rememberLevel(p.id, level)
     Withme.last = { id = p.id, name = p.name, level = level, lics = p.lics, given = {} }
 
-    Queue.push("/f " .. text)
+    for _, line in ipairs(lines) do Queue.push("/f " .. line) end
     Check.mark(p.id, "announce")
-    msg(tr("sent_f", text))
+    msg(tr("sent_f", table.concat(lines, "  /  ")))
+    if #lines > 1 then trace("withme: anuntul impartit in " .. #lines .. " linii, ca sa incapa in 144 de caractere") end
 
     local total, base = subtotal(p.lics, level)
     if total then
